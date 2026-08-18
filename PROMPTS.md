@@ -1,6 +1,12 @@
 # AI IDE Bootstrap Prompts — Silent Council
 
-Copy the relevant section into your AI IDE as your **first message** for the project. These prompts encode the full project context so the AI can autonomously make good decisions without you re-explaining every time.
+Copy **one block per day** into Cursor (Lakshay) or Antigravity (Krishna). The AI writes the code. You still Approve, push, and click browser stuff (Vercel, MetaMask, Supabase).
+
+**Pasting is 30 seconds. The session is still ~4h** because you wait for generation, fix errors, and test in the browser. You are not typing Solidity/React by hand.
+
+Dated prompts:
+- Lakshay → **Step 4** (18–23 Aug)
+- Krishna → **Step 6** (18–23 Aug)
 
 ---
 
@@ -136,18 +142,99 @@ Do NOT build /dashboard, /verifiability, /pitch, or /proposals (feed page). Thos
 Commit each file as you go: `[FE] tally-bar`, `[FE] proposal detail page`, `[FE] verify page`.
 ```
 
-### Step 4 — Daily kickoff prompt template (paste each morning)
+### Step 4 — Dated kickoff prompts (Lakshay — copy the block for TODAY only)
+
+Pasting is ~30 seconds. Cursor writing code is ~20–40 min. **Your time** is Approve + `git push` + open the site + click around (~2–4h). The AI does not deploy or click MetaMask for you.
+
+---
+
+#### Tue 18 Aug — already covered by Step 2 above. Paste Step 2, not this.
+
+---
+
+#### Wed 19 Aug — paste this whole block
 
 ```
-Good morning. Read PRD.md and the latest git log first.
+Read @PRD.md §2 MUST SHIP and §8.3 Day 1. Today is Wed 19 Aug 2026. I have ~4 hours.
 
-Today is Day <N> per PRD §8.3. My focus areas:
-- <copy the task list from PRD §8.3 for the day>
+I am Lakshay, frontend. Krishna owns APIs and the contract.
 
-Start with task 1. After each task, commit and confirm with me before moving on.
+Do ONLY this, in order. Commit after each. Confirm with me before the next.
 
-Blockers from yesterday: <list any>
-Waiting on teammate for: <list any>
+1. Pull latest. If Krishna pushed an ABI + address, put them in frontend/lib/contracts.ts and .env.local.
+2. Build frontend/components/tally-bar.tsx — three coloured bars (yes/no/abstain), no Recharts, no Framer Motion.
+3. Build frontend/app/proposals/[id]/page.tsx — title, description, TallyBar, Yes/No/Abstain buttons that POST /api/vote per PRD §7.4. If the API is a stub, still wire it and show the error toast.
+4. Build frontend/app/verify/page.tsx — connect wallet + Verify button that POST /api/attest with mock proof if zk.email is not ready.
+5. Green ✓ in the nav if isVerified(address) is true. If ABI is empty, skip the badge.
+6. Fix TypeScript errors. I will push and deploy to Vercel myself.
+
+Do NOT build /dashboard, /pitch, /verifiability, /proposals feed, create-proposal form, animations.
+
+STOP when verify + proposal detail pages render. Tell me what to put in Vercel env vars.
+```
+
+---
+
+#### Thu 20 Aug — paste this whole block
+
+```
+Read @PRD.md §2 MUST SHIP and §8.3 Day 2. Today is Thu 20 Aug 2026. I have ~4 hours.
+
+Priority: the demo loop in production. Verify → open a proposal → vote → vote again → rejected.
+
+1. Pull latest. Wire vote buttons fully to POST /api/vote. Handle already_voted, not_verified, proposal_closed with sonner toasts. Show tx hash on success.
+2. Wire /verify to POST /api/attest for real (or OTP if Krishna shipped that). On success show ✓ badge.
+3. If Krishna seeded 3 proposals, landing cards should link to real /proposals/[id] UUIDs — not hardcoded junk.
+4. Mobile pass: no horizontal scroll, buttons tappable on a phone-width screen.
+5. Do not add new pages or packages.
+
+After that I will test in the browser and deploy. If something is blocked on Krishna, stub it and list exactly what I need from him.
+```
+
+---
+
+#### Fri 21 Aug — paste this whole block
+
+```
+Read @PRD.md §8.3 Day 3 and §11 demo script. Today is Fri 21 Aug 2026. I have ~4 hours.
+
+NO NEW FEATURES. No dashboard, no charts, no confetti.
+
+1. Fix any TypeScript / build errors so Vercel is green.
+2. Make copy on the landing + verify + proposal pages judge-readable (short, clear).
+3. Create docs/demo-script.md with the 90s script from PRD §11 if it is missing.
+4. List 4 screenshot paths I should capture: landing, verify, proposal, vote toast.
+5. If and only if the demo loop already works: optional 30-min add of live tally via Supabase Realtime. Skip if anything is broken.
+
+I will record Loom and make Canva slides myself. You just make the app stable and the copy clean.
+```
+
+---
+
+#### Sat 22 Aug — paste this whole block (submit day)
+
+```
+Read @PRD.md §12 and §8.3 Day 4. Today is Sat 22 Aug 2026. Submit on Devfolio by 5 PM IST.
+
+1. Smoke-test the happy path in code: verify page, proposal page, vote error handling. Fix P0 bugs only.
+2. Write a short public README.md: one-paragraph pitch, live URL placeholder, GitHub, tech stack, credits (zk.email, EAS, Base, Krishna + Lakshay).
+3. Do not add features. Do not refactor.
+
+I will deploy, screenshot, record if needed, and submit. After README, STOP.
+```
+
+---
+
+#### Sun 23 Aug — paste this only if judges flag a bug
+
+```
+Today is Sun 23 Aug 2026, judging day. Do not add features.
+
+Fix only the bug I paste below:
+
+<paste judge / demo bug>
+
+Smallest possible change. Then tell me how to redeploy on Vercel.
 ```
 
 ### Step 5 — When you're stuck
@@ -387,21 +474,94 @@ Handle every error path per PRD §7.4 error enum.
 Present the full file. Use Planning Mode. Wait for my approval.
 ```
 
-### Step 6 — Daily kickoff prompt template (paste each morning)
+### Step 6 — Dated kickoff prompts (Krishna — copy the block for TODAY only)
+
+Pasting is fast. Remix / Supabase / MetaMask clicks are still on you (see docs/KRISHNA_SETUP.md). Antigravity writes the code; you Approve, then click Deploy.
+
+---
+
+#### Tue 18 Aug — use KRISHNA_SETUP.md + Step 3 bootstrap, not a second prompt.
+
+---
+
+#### Wed 19 Aug — paste this whole block
 
 ```
-Good morning. Read the latest git log and @PRD.md.
+Read @PRD.md §7.4 and §9.3 Day 1. Today is Wed 19 Aug 2026. I am Krishna. ~4 hours.
 
-Today is Day <N> per PRD §9.3. My tasks for today:
-- <copy from PRD>
+Use Planning Mode. Wait for my OK before editing files.
 
-Deliverables I owe team lead today:
-- <copy from PRD §9.4 for this day>
+1. Implement POST frontend/app/api/attest/route.ts per PRD §7.4.
+   - Mock zk.email proof verification for now (accept mock / any proof in dev).
+   - Real parts: nullifier = keccak256(email + DOMAIN_SALT), issuer signMessage, call SilentCouncil.verifyVoter, insert verified_users, return the §7.4 JSON shape.
+2. Implement POST frontend/app/api/vote/route.ts per PRD §7.4.
+   - Lookup nullifier, sign, call SilentCouncil.vote, insert votes, bump tally on proposals.
+3. GET /api/proposals can read from Supabase. Skip POST create-proposal UI.
+4. Give me the SQL to paste in Supabase to seed 3 proposals (mess hours, plastic bottles, library hours) matching PRD §9.3.
+5. Tell me exactly which Vercel env vars Lakshay must set.
 
-Blockers from yesterday: <list>
-Waiting on team lead for: <list>
+Do not write custom circuits. Do not add extra routes.
+```
 
-Present a plan for the first 3 hours in Planning Mode.
+---
+
+#### Thu 20 Aug — paste this whole block
+
+```
+Read @PRD.md §9.3 Day 2 and §13.2. Today is Thu 20 Aug 2026. I am Krishna. ~4 hours.
+
+Goal: verify → vote → double-vote-rejected works in production.
+
+1. Pull latest. Check Vercel logs if Lakshay shares them.
+2. Replace mock attest with @zk-email/sdk + blueprint udp/gmail-domain-proof if it is quick.
+3. If zk.email is not working in 60 minutes, implement POST /api/verify-otp per §13.2 (email code → hash email → same nullifier + verifyVoter path). Tell Lakshay the frontend button change in one paragraph.
+4. On already_voted / invalid_proof / not_verified, insert sybil_attempts.
+5. Planning Mode first. Then implement. I will curl-test and ping Lakshay.
+
+No load tests. No extra features.
+```
+
+---
+
+#### Fri 21 Aug — paste this whole block
+
+```
+Read @PRD.md §9.3 Day 3. Today is Fri 21 Aug 2026. I am Krishna. ~4 hours.
+
+NO NEW FEATURES.
+
+1. Fix bugs Lakshay reports. P0 only.
+2. Write contracts/DEPLOYMENT.md: chain Base Sepolia 84532, contract address, EAS schema UID, how we deployed via Remix.
+3. Confirm seed proposals exist in Supabase. If not, give me SQL to paste.
+4. Optional: Basescan verify — only if everything else is stable. Skip otherwise.
+
+Support Lakshay's Loom recording: keep APIs up.
+```
+
+---
+
+#### Sat 22 Aug — paste this whole block
+
+```
+Today is Sat 22 Aug 2026. Submit by 5 PM IST. I am Krishna.
+
+1. Fix only P0 bugs Lakshay pastes.
+2. Give Lakshay 4 bullets for Devfolio: contract address, EAS UID, trust model (offchain zk verify + issuer signature), how double-vote is blocked (nullifier).
+3. No new features. No refactors.
+
+If nothing is broken, wait. Do not invent work.
+```
+
+---
+
+#### Sun 23 Aug — paste only if something breaks during judging
+
+```
+Today is Sun 23 Aug 2026 judging. Fix only this bug:
+
+<paste bug>
+
+Smallest change. Remind me to redeploy Vercel / Remix if the contract must change.
 ```
 
 ### Step 7 — When you're stuck
