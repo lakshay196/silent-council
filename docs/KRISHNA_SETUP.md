@@ -2,7 +2,7 @@
 
 **Hey Krishna.** Lakshay sent you this. Follow every step in order. Total time: ~45–60 min.
 
-If you get stuck for more than 15 minutes → call Lakshay, screen share.
+
 
 ---
 
@@ -191,14 +191,23 @@ git push
 
 **Message Lakshay:** "Step 10 done — all keys in Notion, contract pushed."
 
+**You are done for Tuesday.** Close the laptop. Do not start API routes tonight.
+
 ---
 
-## Tomorrow (Wed) — your 4h focus
+## After this guide — one sentence per day
 
-Per PRD §9.3 Day 1:
-- `POST /api/attest` — use PROMPTS.md Step 5 prompt
-- `POST /api/vote` — same file, follow PRD §7.4
-- Seed 3 proposals in Supabase (SQL block in PRD §9.3)
+You do **not** need to read the whole PRD. After Step 10, your job is:
+
+| Day | You do | How |
+|---|---|---|
+| **Tue (today)** | Finish Steps 1–10 above. Ping Lakshay. | This file. |
+| **Wed** | Build two API routes: `/api/attest` and `/api/vote`. Seed 3 proposals in Supabase. | Open Antigravity → paste **PROMPTS.md Step 5**. Follow what it writes. SQL for seed data is in PRD §9.3. |
+| **Thu** | Make verify + vote actually work in production. If zk.email fights you, ship email OTP instead (PRD §13.2). | Test with Lakshay on a video call. |
+| **Fri** | Fix bugs. Help Lakshay record the demo. Write `contracts/DEPLOYMENT.md`. | No new features. |
+| **Sat** | Sit with Lakshay. Fix last bugs. Submit is **5 PM**. | Rehearse: "how do we stop double voting?" |
+
+If Lakshay hasn't given you a Vercel URL by Wednesday, ping him — you need it to test your APIs.
 
 ---
 

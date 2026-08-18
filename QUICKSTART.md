@@ -1,6 +1,11 @@
 # Silent Council — QUICKSTART
 
-**Read this first. Then PRD.md.**
+**Lost? Read only your personal guide:**
+
+- **Lakshay (Mac):** `docs/LAKSHAY_SETUP.md`
+- **Krishna (Windows):** `docs/KRISHNA_SETUP.md`
+
+Ignore the rest of this file until those are done.
 
 ---
 
