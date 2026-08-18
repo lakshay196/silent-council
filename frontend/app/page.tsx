@@ -92,6 +92,9 @@ export default function Home() {
               See live proposals
             </Link>
           </div>
+          <p className="mt-3 text-sm text-zinc-400">
+            Demo also accepts Gmail
+          </p>
         </section>
 
         <section className="mt-20">
