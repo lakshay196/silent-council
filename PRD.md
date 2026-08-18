@@ -6,7 +6,8 @@
 **Hackathon:** [Road to Devcon — NITK Surathkal](https://road-to-devcon-nitk-surathkal.devfolio.co/overview) (Aug 17–23, 2026)
 **Theme:** Make Private Apps using Ethereum
 **Team size:** 2 (Team Lead + Contract/Backend Engineer)
-**Deliverable deadline:** Friday **Aug 22, 2026, 11:59 PM IST** (target submission — Sunday Aug 23 is buffer only)
+**Deliverable deadline:** Saturday **Aug 22, 2026, ~5 PM IST** (submit) — Sun Aug 23 is judging only
+**Time budget (be honest):** ~4 hours/day Tue–Fri + ~10 hours Sat. Total ≈ 26h each, ≈ 52h combined. **This is a "cut everything non-essential" build.**
 
 ---
 
@@ -15,6 +16,8 @@
 Anyone at NITK can create a proposal ("Should mess timings be extended?"). Verified NITK students prove they own an `@nitk.edu.in` email via a zero-knowledge proof (`zk.email`) — get an onchain attestation (EAS on Base Sepolia) — then vote anonymously. Their vote is recorded on a smart contract with a nullifier so they can't vote twice, but nobody (not even us) can tell who they are or what they voted.
 
 Judges see a live demo where they sign in with a real Google account, cast a vote, watch the tally update in real time, and try to double-vote and get rejected. 90 seconds. Mic drop.
+
+> **Scope reality (Aug 18 rewrite):** We have ~4h/day Tue–Fri and ~10h Sat. That's it. We are building the demo loop only — landing, verify, one proposal page, vote, double-vote rejection. Everything else (dashboard, sybil counter, animations, pitch page, seed 20 proposals, ranked-choice, Etherscan verify, custom domain) is **CUT unless we're ahead of schedule by Fri 6 PM**.
 
 ---
 
@@ -47,34 +50,38 @@ Adopt it for the next NITK student council election. Any student club can spin u
 
 ## 2. Product Overview (What We're Building)
 
-### Core Features (MVP — Must Ship)
+### MUST SHIP (the 90-second demo loop — non-negotiable)
 
-1. **Landing page** — hero pitch, "Verify with your NITK email" CTA, live counter of "N verified students, M votes cast."
-2. **Verification flow** — wallet connect → sign in with Google (via zk.email blueprint that reads a Gmail message) → ZK proof generated → EAS attestation issued to your wallet on Base Sepolia. Takes ~30 seconds.
-3. **Proposals feed** — browse all live and past proposals with vote counts, deadlines, categories (Academic / Hostel / Mess / Cultural / General).
-4. **Proposal detail page** — full description, live tally chart (updates every 5s), vote button (Yes / No / Abstain), deadline countdown, list of onchain vote transactions (without voter identities).
-5. **Cast vote** — verified users click a choice → transaction submitted → nullifier prevents double-voting → tally updates.
-6. **Create proposal** — verified users can propose. Fields: title, description, category, deadline (max 7 days for demo).
-7. **My dashboard** — see the attestation you hold, proposals you've voted on (only visible to *you*, stored client-side), verify your voter status.
-8. **Verifiability page** — publicly viewable "how this works" page that shows the cryptographic guarantees, links to the contract on Basescan and the EAS schema on EASscan.
+1. **Landing page** — hero + one-line pitch + "Verify with NITK email" CTA + 3 hardcoded proposal cards below. Dark theme. Mobile works. **Zero animation, zero fake stat counters, zero live sybil widget.** Ship it ugly first.
+2. **Verification flow** — wallet connect → click "Verify" → ZK email proof (or OTP fallback per §13.2) → backend signs → contract stores nullifier → green ✓ badge. One page (`/verify`), one modal.
+3. **Proposal detail page** — one route `/proposals/[id]`. Title, description, Yes/No/Abstain buttons, tally shown as three coloured bars with counts. That's it.
+4. **Cast vote** — click button → wallet signs tx → contract checks nullifier → tally increments → toast confirms. Double-vote gets rejected with a clear message.
+5. **Seed data** — 3 pre-created proposals inserted via SQL directly on Wed (no create-proposal UI needed). Titles like "Extend mess hours to 11pm?", "Ban plastic bottles in hostels?", "Longer library hours during exams?".
+6. **Mobile responsive** — judges use phones.
 
-### Polish Features (Should Ship — Day 3–4)
+That's the entire product. Verify → open proposal → vote → try again → rejected. **Six items. Do only these until Sat morning.**
 
-9. **Real-time tally chart** — animated bar/pie chart on proposal detail page.
-10. **Turnout stats** — "42% of verified NITK students have voted on this proposal."
-11. **Sybil counter** — "12 double-vote attempts blocked" — visualize the sybil resistance in action.
-12. **Category filters + search** on proposals feed.
-13. **Beautiful dark theme** with glassmorphism, subtle animations on vote submission.
-14. **Mobile-responsive** — everything works on a phone; judges will try on their phone.
-15. **Seed data** — 5 realistic pre-created proposals on demo day (e.g., "Extend mess hours to 11pm?", "Ban plastic bottles in hostels?", "Increase library hours during exams?"). Makes the demo instantly relatable.
-16. **Live pitch page** — a `/pitch` route with the full deck as scrollable sections, in case judges want to read.
+### SHOULD SHIP (only if the demo loop is fully working by Fri 6 PM)
 
-### Stretch (Only if we're ahead — do NOT prioritize)
+7. **Proposals feed page** at `/proposals` — grid of cards. If the demo loop works, add this Fri evening.
+8. **Create proposal UI** at `/proposals/new` — form calling `POST /api/proposals`. Fri evening at earliest.
+9. **Live tally updates via Supabase Realtime** (currently manual refresh works fine for demo).
+10. **Sybil counter widget** on landing — nice narrative, ~30 min to add if data is already being logged.
 
-17. Ranked-choice / multi-option proposals.
-18. Comment thread on proposals (verified anonymous).
-19. Vote delegation (liquid democracy).
-20. Bonus: integrate the friend's **SP1 DOB proof** as a second attestation type — restricted proposals (e.g., "Should the pub next to campus stay open until 2am?") only visible/votable by verified 18+ students. Nice narrative flex, credits the existing repo.
+### CUT unless a miracle happens (do NOT build)
+
+- ❌ `/dashboard` (your own attestation view) — not in demo script
+- ❌ `/verifiability` page — link to a doc from footer instead
+- ❌ `/pitch` route — the pitch lives in README + Canva deck, not in the app
+- ❌ Animated stat counters, Framer Motion page transitions, canvas-confetti — pure fluff
+- ❌ Recharts / D3 tally chart — three CSS bars work fine
+- ❌ Category filters, search, deadline countdown widget
+- ❌ Turnout percentage stat
+- ❌ Etherscan / Basescan contract verification — link to raw source in repo instead
+- ❌ Custom domain (`silentcouncil.xyz`) — use the `*.vercel.app` URL
+- ❌ Ranked-choice, comments, delegation
+- ❌ SP1 DOB integration
+- ❌ Load testing, animation polish, glassmorphism
 
 ### Anti-scope (Do NOT build — will kill us)
 
@@ -170,38 +177,28 @@ We could verify the zk.email proof *fully onchain* using zk.email's onchain veri
 
 ---
 
-## 5. Prerequisites & Account Setup (BOTH DO TODAY — Aug 18, before 6 PM)
+## 5. Prerequisites & Account Setup (~30 min total — finish TODAY, Aug 18)
 
-### Both of you
+### Both of you (~15 min)
 
-- [ ] **GitHub account** (free) — you probably have one
-- [ ] **Node.js 20+ installed** — verify with `node -v` (both machines have this)
-- [ ] **MetaMask browser extension** — install from [metamask.io](https://metamask.io)
-- [ ] **Add Base Sepolia to MetaMask** — go to [chainlist.org](https://chainlist.org), search "Base Sepolia," click Add
-- [ ] **Get Base Sepolia testnet ETH** — [Base Sepolia faucet](https://docs.base.org/tools/network-faucets) or [Alchemy faucet](https://sepoliafaucet.com). Aim for 0.05 ETH each. Takes 5 minutes.
-- [ ] **Same shared Google Drive folder or Notion page** for demo assets, pitch deck, video
-- [ ] **Same shared WhatsApp / Discord channel** for real-time comms
+- [ ] **GitHub account** (free)
+- [ ] **Node.js 20+ installed** — `node -v`
+- [ ] **MetaMask** installed → add Base Sepolia via [chainlist.org](https://chainlist.org) → hit an [Alchemy Base Sepolia faucet](https://www.alchemy.com/faucets/base-sepolia), get ~0.05 test ETH. **Use a fresh MetaMask account, no real funds on it.**
+- [ ] **Shared Notion page** for pasting URLs/keys. NOT WhatsApp. Keys never leave that page.
 
-### Team Lead (Lakshay) — Cursor Pro user
+### Team Lead (Lakshay) — ~10 min
 
-- [ ] **Vercel account** — sign up with GitHub, we'll deploy the frontend here (free)
-- [ ] **Confirm Cursor Pro is signed in** and Claude Sonnet 4.7 or GPT-5 is selected as the primary model
-- [ ] **Create a fresh GitHub repo** called `silent-council` under your GitHub. Do NOT commit inside the friend's SP1 repo — start fresh so git history is yours.
-- [ ] **Grant teammate write access** to the fresh repo (Settings → Collaborators)
-- [ ] **Buy a domain (optional)** — `silentcouncil.xyz` or similar on Namecheap ($1–$10 for a year). Skip if tight on time; Vercel gives you a free `.vercel.app` subdomain.
+- [ ] **Vercel account** (sign in with GitHub, free — Hobby plan is fine, hackathons are non-commercial)
+- [ ] **Fresh GitHub repo** `silent-council` (public, empty). Invite teammate as collaborator.
+- [ ] **Skip the custom domain.** `*.vercel.app` is fine for judges.
 
-### Teammate — Antigravity + Google One user
+### Teammate — ~10 min
 
-- [ ] **Confirm Antigravity is installed and Gemini 3 Pro is selected** as default model
-- [ ] **Supabase account** — sign up at [supabase.com](https://supabase.com), create a new project called `silent-council`. Save the URL + anon key.
-- [ ] **Save your Base Sepolia deployer wallet's private key** to a secure note. You'll need it to deploy the contract via Remix. This wallet is ONLY for deploying the contract — keep no real funds on it.
-- [ ] **Get an issuer wallet** — create a *second* wallet in MetaMask called "Issuer." This wallet will sign attestations from our backend. Save its private key securely; you'll paste it into Vercel env vars later.
+- [ ] **Antigravity installed**, Gemini selected
+- [ ] **Supabase account** at [supabase.com](https://supabase.com) → new project `silent-council` (free tier). Copy `URL`, `anon key`, `service_role key` from Project Settings → API into the shared Notion.
+- [ ] **Create a SECOND MetaMask account** in the same wallet, name it "Issuer." Export its private key → paste into shared Notion. **This account must never touch mainnet.**
 
-### Shared credentials management
-
-- Use [1Password](https://1password.com) free trial OR a shared Notion page with restricted access. Do NOT paste keys in WhatsApp.
-
-**If everything above isn't done by 6 PM IST today (Aug 18), we're behind. Team Lead: check in with teammate at 4 PM.**
+**If setup slips past tonight, Wednesday's 4 hours get burned on setup instead of building. Do it now.**
 
 ---
 
@@ -507,139 +504,110 @@ You own **~65% of the surface area**: everything the judge sees, every pixel, th
 - **Reference the PRD explicitly**: "Per PRD §2, feature 4, build the proposal detail page. It must include: [X, Y, Z]."
 - **When Cursor produces something wrong, don't accept and edit — reject and re-prompt with more specificity.**
 
-### 8.3 Day-by-day timeline
+### 8.3 Day-by-day timeline — 4h weekdays + 10h Sat (~26h total)
 
-**Today = Tuesday Aug 18, 2026, ~2:00 PM IST when you start.** Assume you finish at midnight → **~10 hours today**. Then Wed/Thu/Fri/Sat full days. Submission Sat night.
+**Rule: if a block runs over by more than 30 min, cut the next optional item, not sleep.** Missing sleep kills Sat. Missing polish just means the demo isn't glossy.
 
-#### Day 0 — Tue Aug 18 (2 PM – midnight, 10h)
+#### Day 0 — Tue Aug 18 (~4h, starting ~1 PM)
 
-| Time | Task | Deliverable |
-|---|---|---|
-| 2:00 – 2:30 | Read this entire PRD end to end. Then read §7 (interfaces) twice. | You know the plan. |
-| 2:30 – 3:00 | Complete §5 setup checklist (Vercel account, fresh GitHub repo `silent-council`, grant teammate access). | Empty repo pushed, teammate invited. |
-| 3:00 – 3:15 | Copy `PRD.md`, `PROMPTS.md`, `AGENTS.md`, `.cursorrules` into the fresh repo. Commit `chore: initial docs`. | Repo has docs. |
-| 3:15 – 3:30 | Send teammate the repo link + tell him: "read PRD end-to-end, then paste the Antigravity prompt from PROMPTS.md into your IDE." Confirm he starts. | Teammate started. |
-| 3:30 – 5:00 | Scaffold Next.js app. Cursor prompt: *"Bootstrap `frontend/` with `npx create-next-app@latest frontend --typescript --tailwind --app --eslint --src-dir=false --import-alias='@/*'`. Add shadcn/ui with `npx shadcn@latest init`. Install wagmi v2, viem, @rainbow-me/rainbowkit, @tanstack/react-query, @supabase/supabase-js, @zk-email/sdk. Create `lib/types.ts` per PRD §7.5. Create `lib/contracts.ts` with a placeholder for the contract address."* | `frontend/` boots on `npm run dev`. |
-| 5:00 – 6:00 | Configure wagmi + RainbowKit for Base Sepolia. Create `app/providers.tsx` with WagmiProvider, RainbowKitProvider, QueryClientProvider. Wire into `app/layout.tsx`. | Wallet connect button works. |
-| 6:00 – 6:30 | **Deploy the empty scaffold to Vercel.** Push to GitHub, import into Vercel, set placeholder env vars, deploy. This shakes out deploy issues on Day 0, not Day 4. | Live at `silent-council-XXX.vercel.app`. |
-| 6:30 – 7:00 | Break. Eat. Do NOT skip. | Alive. |
-| 7:00 – 8:30 | Build the landing page. Hero: title, one-line pitch, big "Verify with NITK email" CTA button (dead-link for now), animated stats counter (fake numbers ok — `1,247 verified students, 8 live proposals`). Dark theme. Use gradient. Look at [linear.app](https://linear.app) or [vercel.com](https://vercel.com) for design inspo — tell Cursor. | Landing page shipped. |
-| 8:30 – 9:30 | Build the shadcn design system polish — buttons, cards, badges, dialogs all styled. Set up global fonts (Inter or Geist). | Design system in place. |
-| 9:30 – 10:30 | Build the empty proposals feed page at `/proposals`. Mock 5 proposals in-memory. Grid of `<ProposalCard>` components. Category filter chips at top. | Feed page renders with mock data. |
-| 10:30 – 11:30 | Build the proposal detail page skeleton at `/proposals/[id]`. Header, description, tally chart placeholder, vote buttons (dead-link for now), deadline countdown. | Detail page renders. |
-| 11:30 – midnight | Commit everything. Push. Confirm Vercel deploy is green. Send teammate a screenshot of the current state on WhatsApp. Sleep. | Day 0 done. |
-
-**Checkpoint at 6 PM today:** confirm teammate has done §5 setup and created the Supabase project. Ask him for the Supabase URL + anon key by 8 PM so you can wire them tomorrow.
-
-#### Day 1 — Wed Aug 19 (10h)
-
-**Priority: verification flow end-to-end + wire the contract.**
+Goal: **empty-but-live app on Vercel + wallet connect + landing page skeleton.** Nothing else.
 
 | Time | Task |
 |---|---|
-| 9:00 – 9:30 | Morning check-in with teammate on WhatsApp. Confirm he has: (a) Solidity contract skeleton written, (b) Supabase URL + anon key sent to you, (c) EAS schema UID sent to you. If any missing, escalate. |
-| 9:30 – 11:00 | Build `/verify` page. UI: Step 1: Connect wallet. Step 2: Click "Verify Email" → opens a modal that walks user through: "Send yourself a Gmail verification email → forward to zk.email prover." (Wait for teammate's `/api/attest` endpoint before wiring — mock in the meantime.) |
-| 11:00 – 12:00 | Wire wagmi `useReadContract` hook to `isVerified(address)` — displays green ✓ badge in the top nav if user is verified. |
-| 12:00 – 13:00 | Lunch. |
-| 13:00 – 14:30 | **Cursor prompt:** *"Create a `<TallyChart>` component that takes `{yes, no, abstain}` numbers and shows an animated horizontal stacked bar. Use Recharts or plain SVG with Framer Motion. Percentages labeled inline. Green/red/gray."* Add to proposal detail page. |
-| 14:30 – 16:00 | Build create-proposal flow at `/proposals/new`. Form: title, description (textarea, markdown supported), category dropdown, deadline (date picker). Submit → calls teammate's `POST /api/proposals`. |
-| 16:00 – 17:00 | Wire real Supabase reads: replace mock proposals with `supabase.from('proposals').select('*')` in the feed page. Use React Query for caching. |
-| 17:00 – 18:00 | Wire the Realtime subscription for live tally updates on proposal detail page: `supabase.channel('proposals').on('postgres_changes', ...)`. |
-| 18:00 – 18:30 | Break. |
-| 18:30 – 20:00 | **Test end-to-end with teammate.** Have him call `/api/proposals POST` from a curl command. Verify a proposal appears in your feed within 2s (Realtime). Fix any interface mismatches. |
-| 20:00 – 21:00 | Add "My Dashboard" page at `/dashboard` showing user's attestation, proposals they've voted on. |
-| 21:00 – 22:00 | Polish landing page hero + copy. Add real testimonial quotes (make them up but attribute to plausible NITK personas). |
-| 22:00 – 23:00 | Deploy latest to Vercel. Test on your phone. Fix mobile responsive bugs. |
-| 23:00 – midnight | Send teammate a status update. Note any blockers. Sleep. |
+| 1:00 – 1:20 | Read §0, §2, §7, §8, §11. Skip the rest. |
+| 1:20 – 1:40 | §5 setup: Vercel, fresh `silent-council` repo, teammate invited. Copy this PRD + `AGENTS.md` + `PROMPTS.md` + `QUICKSTART.md` in. First commit. |
+| 1:40 – 1:50 | Ping teammate the QUICKSTART message from `QUICKSTART.md`. He starts §5 + §9 Day 0 in parallel. |
+| 1:50 – 3:30 | In Cursor: paste PROMPTS.md → "Step 2 — Day 0 kickoff" prompt. Let it scaffold `frontend/`, install deps, set up shadcn, create `lib/types.ts` + `lib/contracts.ts` + `lib/supabase.ts` + wagmi providers. Do NOT install framer-motion / canvas-confetti / recharts — they're cut. |
+| 3:30 – 4:15 | Landing page: dark hero, title, subtitle, "Verify with NITK email" CTA (dead-link to `/verify`), 3 hardcoded `<ProposalCard>`s below. No animated counters, no stats. Should look decent, not amazing. |
+| 4:15 – 4:45 | Push → Vercel import → deploy. Paste placeholder env vars. Confirm URL loads. Share URL in team Notion. |
+| 4:45 – 5:00 | Commit everything. Message teammate: what you shipped, what you need from him tomorrow. Close laptop. |
 
-**Checkpoint at noon:** teammate should have the contract deployed. Ask for the address. If not deployed, that's a red flag — push him hard, and start thinking about the "no contract, Supabase-only" fallback.
+**Checkpoint tonight (whenever teammate finishes):** he must send you Supabase URL + anon key + service role key, plus the deployed contract address (or at least a stub deployed with placeholder functions). If those aren't in Notion by end of Tue, Wed's plan changes.
 
-**Checkpoint at 6 PM:** `/api/proposals POST` and `/api/attest POST` should both work end-to-end. If they don't, teammate is behind — you help him after 10 PM.
+#### Day 1 — Wed Aug 19 (~4h)
 
-#### Day 2 — Thu Aug 20 (10h)
-
-**Priority: voting works fully, seed data loaded, polish everything.**
+Goal: **proposal detail page renders real data from Supabase. Vote button exists but is dead.**
 
 | Time | Task |
 |---|---|
-| 9:00 – 9:30 | Check-in. Confirm teammate has `/api/vote` working. |
-| 9:30 – 11:30 | Wire vote buttons on proposal detail page: click YES → shows confirm modal → calls `/api/vote` → shows tx hash → success toast. Handle error states (already voted, not verified, closed). |
-| 11:30 – 12:30 | Add "🔴 LIVE" badge and pulsing dot to proposals with deadlines in the next 24h. Countdown timer. |
+| 0:15 | Check Notion: Supabase creds + contract address + EAS schema UID. If any missing, ping teammate NOW. |
+| 0:30 | Update `.env.local` and Vercel env vars with real values. Redeploy. |
+| 0:45 | Paste contract ABI (from teammate's Remix export) into `lib/contracts.ts`. |
+| 1:15 | Build `<TallyBar>` — three coloured `<div>`s with `width: X%`. No Recharts, no Framer. Green/red/gray, count labels inline. |
+| 2:15 | Build `/proposals/[id]/page.tsx`: fetches proposal from Supabase, shows title/description, `<TallyBar>`, three buttons (Yes/No/Abstain) that log to console for now. |
+| 3:00 | Build `/verify/page.tsx`: connect wallet + big "Verify" button + status text. Wire to teammate's `/api/attest` once it exists — mock the response for now if not. |
+| 3:45 | Deploy. Test on your phone. Send teammate a screenshot + tomorrow's asks. |
+
+**If teammate is behind:** stub the contract calls, keep building UI against mock data. Don't wait.
+
+#### Day 2 — Thu Aug 20 (~4h)
+
+Goal: **end-to-end demo loop works in prod.** Vote button → tx → tally increments → second vote rejected.
+
+| Time | Task |
+|---|---|
+| 0:30 | Wire Yes/No/Abstain buttons to `POST /api/vote`. Show tx hash + success toast (sonner). Handle 3 error states: `already_voted`, `not_verified`, `proposal_closed`. |
+| 1:15 | Wire `/verify` to `POST /api/attest` end-to-end. On success, show green ✓ badge in top nav (read `isVerified(address)` from contract via wagmi). |
+| 2:00 | Manual QA: connect fresh MetaMask account → verify → open proposal → vote → refresh → try again → should reject. Fix bugs. |
+| 3:00 | Mobile pass. Open on your phone. Fix overflow / tap-target issues. |
+| 3:45 | Deploy. If anything broke in prod but not local: env vars. Commit + ping teammate. |
+
+**If the demo loop isn't working by end of Thu:** freeze features tomorrow, spend Fri fixing. Do not add anything new.
+
+#### Day 3 — Fri Aug 21 (~4h)
+
+Goal: **demo video + Canva deck + Devfolio draft.** No new features.
+
+| Time | Task |
+|---|---|
+| 0:45 | Record 90s Loom: land → connect → verify → vote → double-vote-rejected. Pre-verify one account beforehand so the ZK proof doesn't stall on camera. Redo it 2× if needed. |
+| 2:00 | Canva deck, 6 slides only: Problem / Solution / How it works (diagram) / Live product screenshots / Why Ethereum / Team + thanks. Don't design; just fill in words + one screenshot per slide. |
+| 3:00 | Draft Devfolio write-up in a note file. Steal from §1 pitch verbatim. Take 4 screenshots (landing, verify, proposal, vote confirmation). |
+| 3:45 | Push everything to repo. Commit `docs: pitch + demo assets`. Send teammate the draft. |
+
+**If time left:** wire Supabase Realtime subscription (live tally without refresh) OR sybil counter widget. **Only one.**
+
+#### Day 4 — Sat Aug 22 (~10h — SUBMIT DAY)
+
+| Time | Task |
+|---|---|
+| 10:00 – 11:00 | Smoke test prod end-to-end with a fresh MetaMask + fresh Google account. Fix anything broken. |
+| 11:00 – 12:30 | Write public `README.md` — pitch section, screenshots, video embed, tech stack, credits. |
 | 12:30 – 13:30 | Lunch. |
-| 13:30 – 15:00 | Build `/verifiability` page. Explain how the ZK proof works, in plain English + one diagram. Link out to contract on Basescan, EAS schema on EASscan, zk.email docs, this GitHub repo. |
-| 15:00 – 16:30 | Build the "sybil counter" widget on landing page: `supabase.from('sybil_attempts').select('*', { count: 'exact' })`. Shows something like "🛡️ 12 double-vote attempts blocked." |
-| 16:30 – 17:30 | Add 5 seed proposals (via teammate's API from the browser or a script). Realistic titles like "Extend mess hours to 11pm?" |
-| 17:30 – 18:30 | Break + walk. |
-| 18:30 – 20:00 | Animation polish: hover states on cards, Framer Motion page transitions, success confetti on vote (canvas-confetti package). |
-| 20:00 – 21:30 | Mobile responsiveness pass. Test in Chrome mobile emulator + real phone. Fix all overflow issues. |
-| 21:30 – 22:30 | Deploy. Fix any prod-only bugs. |
-| 22:30 – midnight | Draft the pitch deck outline in Canva (8 slides). Don't design yet, just outline. Sleep. |
-
-#### Day 3 — Fri Aug 21 (10h)
-
-**Priority: pitch, demo video, submission draft.**
-
-| Time | Task |
-|---|---|
-| 9:00 – 10:30 | Design pitch deck in Canva. 8 slides: (1) Problem, (2) Solution, (3) Live product, (4) How it works (diagram), (5) Why Ethereum, (6) Demo screenshots, (7) What's next (roadmap), (8) Team + thanks. |
-| 10:30 – 11:30 | Rehearse pitch out loud with your teammate on video call. Time it. Aim for 2 minutes. Cut anything that's not landing. |
-| 11:30 – 13:00 | Record demo video (Loom preferred — auto-uploads, easy share link). Script it: (a) Land on landing page, (b) Connect wallet, (c) Verify email (pre-warm the proof so it's instant on camera), (d) Browse proposals, (e) Vote on one, (f) Watch tally update, (g) Try to double-vote — rejected. 90 seconds. |
-| 13:00 – 14:00 | Lunch. |
-| 14:00 – 15:30 | Re-record demo video 2 more times, pick the best take. Trim in iMovie/QuickTime. Upload to YouTube unlisted or Loom. |
-| 15:30 – 17:00 | Write Devfolio submission text. Sections: Inspiration, What it does, How we built it, Challenges, Accomplishments, What's next. Reference PRD's pitch section (§1) — do not write from scratch. |
-| 17:00 – 18:00 | Take 4–6 screenshots at 1920×1080 for Devfolio. Landing, verify, feed, detail, vote confirmation, dashboard. |
-| 18:00 – 18:30 | Break. |
-| 18:30 – 20:00 | Cross-browser test: Chrome, Safari, Firefox, mobile Safari. Fix breakages. |
-| 20:00 – 21:30 | **Bug bash with teammate.** Both of you try to break the app. Every bug → fix immediately or file a note. |
-| 21:30 – 23:00 | Fix bugs. Deploy. |
-| 23:00 – midnight | Final draft of Devfolio submission ready to submit tomorrow. Sleep. |
-
-#### Day 4 — Sat Aug 22 (10h)
-
-**Priority: SUBMIT + polish + rehearse.**
-
-| Time | Task |
-|---|---|
-| 9:00 – 10:00 | Final smoke test in prod. Verify a fresh Google account works end-to-end. |
-| 10:00 – 12:00 | Any last polish + copy fixes. |
-| 12:00 – 13:00 | Lunch. |
-| 13:00 – 15:00 | Write the public README.md — clean, professional, judge-friendly. Includes: pitch, screenshots, video embed, tech stack, credits (zk.email, EAS, Base, and honestly credit `Shivannsh/ZKAttestify-Sp1-verifier` if you kept any SP1 code). |
-| 15:00 – 16:00 | Deploy final. Tag release `v1.0.0`. |
-| 16:00 – 17:00 | Submit on Devfolio. Include video, screenshots, GitHub link, live URL. |
-| 17:00 – 19:00 | Rehearse the live pitch 5 more times. Time yourself. Have your teammate quiz you on possible judge questions. |
-| 19:00 – 20:00 | Break. |
-| 20:00 – 22:00 | **Buffer.** For inevitable last-minute bugs. If none, celebrate. |
-| 22:00 | Confirm submission is in. Take a screenshot of the "submitted" confirmation. Post it in the team WhatsApp. |
+| 13:30 – 15:00 | Any last polish: copy fixes, one hover state, one gradient. Nothing structural. |
+| 15:00 – 16:30 | Bug bash together with teammate on video call. Both try to break it. Fix P0s only. |
+| 16:30 – 17:00 | **SUBMIT on Devfolio.** Video, screenshots, GitHub link, live URL. Take screenshot of confirmation, post in Notion. |
+| 17:00 – 18:00 | Break + eat. |
+| 18:00 – 19:30 | Rehearse the pitch 5× out loud. Have teammate quiz you: "How do you stop sybil?" "What's the trust model?" "Why Base?" — have crisp 15s answers. |
+| 19:30 – 20:30 | Buffer for last bugs. If none, review demo script one more time. |
+| 20:30 | Done. Sleep. |
 
 ### 8.4 What you DELIVER to teammate — and when
 
-| When | Deliverable to teammate | How |
+| When | Deliverable | How |
 |---|---|---|
-| Tue 3:15 PM | GitHub repo `silent-council` + write access | GitHub invite email |
-| Tue 4:00 PM | `frontend/lib/types.ts` with all shared TypeScript types | Pushed to main |
-| Tue 6:30 PM | Vercel deployment URL (for testing his API routes from browser) | WhatsApp |
-| Wed 3:00 PM | `frontend/app/api/` folders created with stub route files (so his edits don't conflict) | Pushed to main |
-| Wed 10:00 PM | Working feed + detail pages that consume his APIs (so he can see visible feedback of his work) | Deployed |
+| Tue ~1:40 PM | Repo access + docs pushed | GitHub invite |
+| Tue ~3:00 PM | `frontend/lib/types.ts` with types per §7.5 + empty `frontend/app/api/{attest,vote,proposals}/route.ts` stubs so his edits don't conflict | Pushed |
+| Tue ~4:45 PM | Live Vercel URL for testing his APIs | Notion |
+| Wed ~4:00 PM | Frontend that visibly consumes his APIs (so he can see his work) | Deployed |
 
 ### 8.5 What you EXPECT from teammate — and when
 
-| When | Deliverable from teammate | If missing, do this |
+| When | Deliverable | If missing, do this |
 |---|---|---|
-| Tue 6:00 PM | Supabase project URL + anon key + service role key | Ping him, offer to pair-program the setup over screen share |
-| Tue 9:00 PM | Supabase schema created per §7.2, tables visible in Supabase Studio | Send him the SQL from §7.2, tell him to paste and run |
-| Wed 10:00 AM | `SilentCouncil.sol` contract file in `contracts/` folder | Ask for status; if stuck, help debug via screen share |
-| Wed 2:00 PM | Contract deployed to Base Sepolia, address shared | If not, help him deploy via Remix live |
-| Wed 4:00 PM | EAS schema UID for the "verified NITK student" attestation | If not, do it yourself via [base-sepolia.easscan.org/schema/create](https://base-sepolia.easscan.org/schema/create) |
-| Wed 8:00 PM | Working `POST /api/attest` endpoint | Test it with curl, work with him to debug |
-| Thu 12:00 PM | Working `POST /api/vote` and `POST /api/proposals` endpoints | Test, debug together |
-| Thu 6:00 PM | End-to-end verify → vote flow working in dev | Fallback: if zk.email fails, use email OTP-based verification (see §13) |
+| Tue end-of-day | Supabase URL + anon + service_role keys | Screen-share with him for 15 min, click through setup together |
+| Tue end-of-day | Contract deployed (even a stub with the right function signatures) + address in `lib/contracts.ts` | If Remix scares him, deploy it yourself. Use his `.sol` file. |
+| Tue end-of-day | EAS schema UID (from easscan.org/schema/create) | Create it yourself; takes 3 min |
+| Wed end-of-day | `POST /api/attest` returns success for a valid input (mock proof OK) | Wire up the OTP fallback route yourself if needed |
+| Thu ~lunch | `POST /api/vote` working against the deployed contract | Same — you have viem knowledge from wagmi work |
+| Thu end-of-day | Verify → vote loop working end-to-end in prod | This is the "call teammate on the phone" moment |
 
 ### 8.6 When you're blocked
 
-- **Cursor Composer is giving garbage code:** rephrase with more constraints. Add "Do NOT do X" clauses.
-- **wagmi hook not firing:** ensure `WagmiProvider` wraps everything. Ensure chain is Base Sepolia. Check RPC URL in `.env.local`.
-- **Vercel build failing:** read the exact error, paste into Cursor. 90% of the time it's a missing env var or `NEXT_PUBLIC_` prefix mistake.
-- **Teammate ghosting:** by 8 PM the day it's due, escalate — call him. If truly stuck, YOU take over the backend and ship a JavaScript-only "verified" flow (email OTP fallback in §13.2).
+- **Cursor keeps producing garbage:** add "Do NOT" constraints, reference PRD section explicitly, or reject + retry with a smaller scoped ask.
+- **wagmi hook not firing:** confirm `WagmiProvider` wraps everything, chain is Base Sepolia (84532), `.env.local` has RPC URL.
+- **Vercel build breaks:** 95% of the time = missing env var or missing `NEXT_PUBLIC_` prefix.
+- **Teammate ghosts by Thu evening:** escalate to a phone call. If truly gone, you take over `/api/vote` and `/api/attest` yourself; use the OTP fallback (§13.2) since the ZK path is the hard part. Cursor can write those API routes in one prompt.
 
 ---
 
@@ -667,141 +635,137 @@ You own **~35% of the surface area**, but it's the *critical path*: nothing work
 - **Test as you go.** After each API route, curl it from your terminal, verify the response shape matches §7.4.
 - **AGENTS.md is already set up.** Antigravity reads it on startup; you don't need to re-explain rules.
 
-### 9.3 Day-by-day timeline
+### 9.3 Day-by-day timeline — 4h weekdays + 10h Sat (~26h total)
 
-#### Day 0 — Tue Aug 18 (2 PM – midnight, 10h)
+You are the **critical path**. If you don't ship, team lead is stuck with a pretty UI and nothing behind it. Pace yourself. Follow the click-by-click checklists in `PROMPTS.md`.
 
-| Time | Task | Deliverable |
-|---|---|---|
-| 2:00 – 3:00 | Read this entire PRD. Then read §7 (interfaces) three times — it's your contract with team lead. | Understand plan. |
-| 3:00 – 3:30 | Accept GitHub invite, clone the repo. Read the `PROMPTS.md` file, copy your Antigravity bootstrap prompt, paste into Antigravity as first message. | Antigravity is bootstrapped. |
-| 3:30 – 4:00 | Complete §5 setup — MetaMask + Base Sepolia + faucet ETH + Supabase account. | Prereqs done. |
-| 4:00 – 5:00 | Create Supabase project `silent-council`. Run the SQL from §7.2 in Supabase SQL editor. Enable Realtime on `votes` and `proposals` tables (Database → Replication). Copy URL + anon key + service role key. | Supabase live. |
-| 5:00 – 5:15 | Send URL + anon key + service role key to team lead via secure channel (Notion, 1Password, or DM — NOT WhatsApp). | TL unblocked. |
-| 5:15 – 6:00 | In Antigravity, prompt: *"Draft `contracts/SilentCouncil.sol` per PRD §7.3 (ISilentCouncil interface). Use OpenZeppelin ECDSA for signature verification. Add natspec comments. Include events per interface. Solidity 0.8.20. MIT license."* Review Antigravity's plan, approve, generate. | Contract file drafted. |
-| 6:00 – 6:30 | Break + food. | Alive. |
-| 6:30 – 8:00 | Copy the contract into [Remix IDE](https://remix.ethereum.org). Compile with Solidity 0.8.20. Fix any compiler errors (paste them back to Antigravity). | Contract compiles. |
-| 8:00 – 9:00 | Deploy to Base Sepolia via Remix + MetaMask (Injected Provider). Deployer wallet = your Base Sepolia wallet. Save the address. | Contract deployed. |
-| 9:00 – 10:00 | Update `frontend/lib/contracts.ts` with the address and ABI (Remix → Compilation Details → ABI copy). Commit + push. Tell team lead. | Address shared. |
-| 10:00 – 11:00 | Go to [base-sepolia.easscan.org/schema/create](https://base-sepolia.easscan.org/schema/create). Create schema: `address wallet, string domain, bytes32 nullifier`. Set revocable=true. Save the UID. | EAS schema live. |
-| 11:00 – midnight | Update `.env.example` with EAS schema UID. Send to team lead. Sleep. | Day 0 done. |
+#### Day 0 — Tue Aug 18 (~4h)
 
-**If you're behind at 9 PM (no contract deployed), ping team lead immediately.**
-
-#### Day 1 — Wed Aug 19 (10h)
+Goal: **Supabase alive + minimal contract deployed to Base Sepolia + address in the repo.** Don't try to build APIs today.
 
 | Time | Task |
 |---|---|
-| 9:00 – 9:30 | Morning check-in with team lead on WhatsApp. Sync on any blockers. |
-| 9:30 – 11:30 | Study `@zk-email/sdk` docs at [docs.zk.email/zk-email-sdk](https://docs.zk.email/zk-email-sdk/). Find or create a Gmail-based blueprint that extracts the `From` field and asserts it ends in `@nitk.edu.in`. Reuse an existing blueprint if you can (search the [zk.email registry](https://registry.zk.email)); create your own only if none fit. |
-| 11:30 – 13:00 | Prompt Antigravity: *"In `frontend/app/api/attest/route.ts`, implement POST per PRD §7.4. Steps: (1) parse request body per PRD §7.4, (2) call `@zk-email/sdk` to verify the proof + public inputs, (3) extract the email from public inputs, (4) verify domain ends with `nitk.edu.in`, (5) compute nullifier = keccak256(email + DOMAIN_SALT), (6) check if wallet is already verified (query Supabase `verified_users`), (7) sign `{wallet, nullifier}` with ISSUER_PRIVATE_KEY using viem's `signMessage`, (8) call SilentCouncil.verifyVoter(wallet, nullifier, sig) using viem walletClient, (9) insert into Supabase `verified_users`, (10) return response per §7.4."* Review plan, execute. |
+| 0:20 | Read PRD §7, §9, §13. Skip the rest. Accept GitHub invite, clone repo. |
+| 0:35 | §5 setup — MetaMask + Base Sepolia + faucet ETH + Supabase account. |
+| 1:15 | In Supabase Studio SQL Editor: paste the SQL from §7.2, click Run. Then Database → Replication → toggle Realtime on `votes` and `proposals`. Paste `URL`, `anon key`, `service_role key` from Settings → API into shared Notion. |
+| 1:20 | Paste Antigravity bootstrap prompt from PROMPTS.md → have it draft `contracts/SilentCouncil.sol` per §7.3. Approve plan, generate. |
+| 2:30 | Open [Remix IDE](https://remix.ethereum.org) → paste contract → Compile with Solidity 0.8.20 (fix errors by pasting them back to Antigravity). Follow the Remix checklist in PROMPTS.md. |
+| 3:15 | In Remix: Deploy tab → environment "Injected Provider - MetaMask" → deploy. Sign the MetaMask popup. Copy the deployed address. Paste in Notion. |
+| 3:30 | Copy the ABI from Remix (Compilation → click clipboard icon next to ABI). Paste into `frontend/lib/contracts.ts` under `SILENT_COUNCIL_ABI`. Set the address constant. Commit + push. |
+| 4:00 | Create the EAS schema at [base-sepolia.easscan.org/schema/create](https://base-sepolia.easscan.org/schema/create): fields `address wallet, string domain, bytes32 nullifier`, revocable=true. Sign MetaMask popup. Paste UID in Notion + `.env.example`. Ping team lead. Done. |
+
+**Stretch (only if fast):** Antigravity can start drafting `frontend/app/api/attest/route.ts` in the background so tomorrow starts warmer.
+
+**If you're behind at ~3h:** ship whatever you have of the contract (even without ECDSA logic — hardcode success paths), get *something* on Base Sepolia so team lead can see an address. Perfect it Wednesday.
+
+#### Day 1 — Wed Aug 19 (~4h)
+
+Goal: **`/api/attest` and `/api/vote` return real responses in prod (mock proof verification OK — signing + contract call must be real).**
+
+| Time | Task |
+|---|---|
+| 0:15 | Check Notion for team lead's asks. Pull latest. |
+| 1:45 | Ask Antigravity (Planning Mode) to write `frontend/app/api/attest/route.ts` per PRD §7.4. Skip real zk.email proof verification for now — accept any proof in dev, focus on: nullifier computation, issuer signing, contract call via viem, Supabase insert, response shape. Deploy to Vercel. |
+| 3:15 | Same for `frontend/app/api/vote/route.ts` per §7.4. Look up nullifier from `verified_users`, sign `{proposalId, nullifier, choice}`, call `SilentCouncil.vote()`, insert into `votes`. Deploy. |
+| 3:45 | curl-test both endpoints from your terminal. Fix env var / Vercel issues. Ping team lead the deployed URL. |
+
+**Do NOT** build `POST /api/proposals` (create-proposal UI is cut). Instead, seed 3 proposals directly in Supabase SQL editor:
+
+```sql
+insert into proposals (onchain_id, title, description, category, deadline, creator_wallet)
+values
+ ('0x1111...', 'Extend mess hours to 11 PM?',        'Currently mess closes at 9:30 PM...', 'mess',     now() + interval '5 days', '0xYourWallet'),
+ ('0x2222...', 'Ban plastic bottles in hostels?',    'Move to reusable bottles...',         'hostel',   now() + interval '5 days', '0xYourWallet'),
+ ('0x3333...', 'Longer library hours during exams?', '24×7 during exam weeks...',           'academic', now() + interval '5 days', '0xYourWallet');
+```
+
+Also create the same proposals on-chain via Remix (`createProposal` write function) with matching `onchain_id`s.
+
+#### Day 2 — Thu Aug 20 (~4h)
+
+Goal: **integrate real ZK proof verification OR ship the OTP fallback (§13.2). Full demo loop working in prod.**
+
+| Time | Task |
+|---|---|
+| 0:15 | Standup with team lead. Confirm frontend calls your APIs and you can see requests in Vercel logs. |
+| 2:00 | Wire the real `@zk-email/sdk` proof verification in `/api/attest`. Reuse blueprint `udp/gmail-domain-proof` from the zk.email registry — do NOT write a circuit. Test with your own Gmail. |
+| 2:30 | If proof gen > 60s or blueprint doesn't fit: **switch to OTP fallback now**. Ship `/api/verify-otp` (Resend or Supabase-Auth-Email for the 6-digit code, hash email → nullifier, sign, call contract). Team lead swaps the frontend button. 45 min of work with Antigravity. |
+| 3:30 | End-to-end test on prod with team lead. Verify → vote → double-vote-rejected loop must work. |
+| 4:00 | Bug fixes. Deploy. |
+
+**Hard rule: by end of Thu, the demo loop must work in prod. If it doesn't, Fri is emergency mode.**
+
+#### Day 3 — Fri Aug 21 (~4h)
+
+Goal: **stability + support team lead's video recording.** No new features.
+
+| Time | Task |
+|---|---|
+| 0:30 | Fix whatever team lead's phone testing turned up. |
+| 1:30 | Log sybil attempts: on every rejection path (`already_voted`, `not_verified`, `invalid_proof`), insert a row into `sybil_attempts`. 30 min of work. |
+| 3:00 | Support team lead recording the Loom demo. Have his verify account ready. Pre-cast a vote or two so tallies look non-zero. |
+| 4:00 | Push `contracts/DEPLOYMENT.md` — contract address, ABI (link to file), chain info, EAS schema UID, deploy notes. |
+
+**Stretch (only if everything is stable):** Basescan contract verification. Not required.
+
+#### Day 4 — Sat Aug 22 (~10h — SUBMIT DAY)
+
+| Time | Task |
+|---|---|
+| 10:00 – 11:00 | Smoke test with team lead. Fix anything red. |
+| 11:00 – 13:00 | Support README writing. Provide contract address, EAS schema UID, tech stack summary paragraphs. |
 | 13:00 – 14:00 | Lunch. |
-| 14:00 – 16:00 | Test `/api/attest` locally with a real Google email. Debug. |
-| 16:00 – 18:00 | Implement `/api/proposals` GET + POST per §7.4. GET reads from Supabase, POST calls `SilentCouncil.createProposal` via viem then inserts into Supabase. |
-| 18:00 – 18:30 | Break. |
-| 18:30 – 20:30 | Implement `/api/vote` POST per §7.4. Look up nullifier from `verified_users`, sign `{proposalId, nullifier, choice}` with issuer key, call `SilentCouncil.vote(...)`, on success insert into Supabase `votes` and increment the tally on `proposals` row (which triggers Realtime to frontend). |
-| 20:30 – 22:00 | End-to-end test with team lead. He tries to verify, vote, browse. Fix bugs. |
-| 22:00 – midnight | Write `contracts/DEPLOYMENT.md`: contract address, ABI, deployment instructions, EAS schema UID, chain info. Sleep. |
-
-#### Day 2 — Thu Aug 20 (10h)
-
-| Time | Task |
-|---|---|
-| 9:00 – 10:00 | Check-in. Priority items from team lead. |
-| 10:00 – 12:00 | Implement `/api/proposals/:id` GET. Includes recent votes list (from Supabase, no PII). |
-| 12:00 – 13:00 | Lunch. |
-| 13:00 – 15:00 | Log sybil attempts. In every rejection path (already voted, invalid proof, wrong domain) insert a row into `sybil_attempts`. |
-| 15:00 – 17:00 | Load test: create 20 proposals via script, cast 100 fake votes (using multiple test wallets with mocked verification). Ensure UI stays fast. |
+| 14:00 – 16:30 | Buffer for last bugs. If none, sit next to team lead during recording. |
+| 16:30 – 17:00 | Submission confirmation. |
 | 17:00 – 18:00 | Break. |
-| 18:00 – 20:00 | Bug bash — try to break your own APIs. Fix everything. |
-| 20:00 – 22:00 | Second-pass code review with Antigravity: *"Review all files in `frontend/app/api/` for security issues, missing validation, error handling, and race conditions. Suggest fixes."* Apply. |
-| 22:00 – midnight | Write API integration docs in `contracts/DEPLOYMENT.md`. Sleep. |
-
-#### Day 3 — Fri Aug 21 (10h)
-
-| Time | Task |
-|---|---|
-| 9:00 – 10:00 | Check-in. |
-| 10:00 – 13:00 | **Support team lead.** Help him wire the frontend to your APIs. Fix any interface mismatches. |
-| 13:00 – 14:00 | Lunch. |
-| 14:00 – 17:00 | **Fallback prep** (see §13). Implement an email-OTP fallback (`/api/verify-otp`) in case zk.email fails on demo day. Off-by-default; toggled by env var. |
-| 17:00 – 18:00 | Break. |
-| 18:00 – 21:00 | Contract Etherscan verification. Go to [Basescan Sepolia](https://sepolia.basescan.org), find your contract, click "Verify & Publish," paste flattened source. Gives you a green ✓ on Basescan — huge credibility for judges. |
-| 21:00 – midnight | Bug fixes + rest. |
-
-#### Day 4 — Sat Aug 22 (10h)
-
-| Time | Task |
-|---|---|
-| 9:00 – 12:00 | Help team lead with final polish + testing. |
-| 12:00 – 13:00 | Lunch. |
-| 13:00 – 16:00 | Buffer for any last bugs. |
-| 16:00 – 19:00 | Support Devfolio submission with technical description. Provide the contract address and EAS schema UID for the submission text. |
-| 19:00 – 22:00 | Rehearse the technical Q&A. Anticipate judge questions: "How do you prevent sybil?" "What's the trust model?" "Why Base Sepolia?" Have crisp answers. |
+| 18:00 – 20:00 | Rehearse the technical Q&A with team lead. Judge questions you must answer in 15s each: "How do you prevent sybil?" "What's the trust model?" "Why Base Sepolia?" "How would you make this fully onchain?" See the honest answer in §4 ("Why the 'trusted issuer' pattern?"). |
+| 20:00 | Done. Sleep. |
 
 ### 9.4 What you DELIVER to team lead — and when
 
 | When | Deliverable | How |
 |---|---|---|
-| Tue 5:15 PM | Supabase URL + anon key + service role key | Notion / 1Password |
-| Tue 9:00 PM | Contract deployed on Base Sepolia + address + ABI in `frontend/lib/contracts.ts` | Commit + push + WhatsApp ping |
-| Tue 11:00 PM | EAS schema UID | `.env.example` update + WhatsApp |
-| Wed 1:00 PM | Working `POST /api/attest` in prod (Vercel) | Deploy + test link |
-| Wed 6:00 PM | Working `POST /api/proposals` and `GET /api/proposals` | Deploy |
-| Wed 8:30 PM | Working `POST /api/vote` | Deploy |
-| Thu 12:00 PM | `GET /api/proposals/:id` with tally | Deploy |
-| Thu 6:00 PM | All endpoints stable, sybil logging live | Deploy |
-| Fri 6:00 PM | Contract Etherscan-verified (green ✓ on Basescan) | Basescan link |
-| Fri 10:00 PM | `contracts/DEPLOYMENT.md` complete | Commit + push |
+| Tue end-of-day | Supabase URL + anon + service_role keys | Notion |
+| Tue end-of-day | Contract deployed + address + ABI in `frontend/lib/contracts.ts` | Push |
+| Tue end-of-day | EAS schema UID in `.env.example` | Push |
+| Wed end-of-day | `POST /api/attest` + `POST /api/vote` return real responses in prod (proof verification can be a mock returning success) | Vercel URL |
+| Thu end-of-day | Real ZK proof verification OR OTP fallback shipped in prod. Full verify → vote loop working. | Vercel + a video call |
+| Fri end-of-day | `contracts/DEPLOYMENT.md` complete | Push |
 
 ### 9.5 What you EXPECT from team lead — and when
 
 | When | Deliverable | If missing, do this |
 |---|---|---|
-| Tue 3:15 PM | GitHub repo access | Ping him |
-| Tue 4:00 PM | `frontend/lib/types.ts` per §7.5 | Write it yourself if he's late; TL doesn't own the ABI, but the types are handy |
-| Tue 6:30 PM | Vercel deployment URL | Ping |
-| Wed 3:00 PM | `frontend/app/api/` folder scaffold with empty route files | Create yourself |
-| Wed 10:00 PM | Frontend pages consuming your APIs — visible feedback on Vercel | Test your APIs via Postman if not |
+| Tue ~2 PM | GitHub repo access | Ping him |
+| Tue ~3 PM | Empty `frontend/app/api/{attest,vote,proposals}/route.ts` stubs + `lib/types.ts` | Create them yourself, 5 min job |
+| Tue ~5 PM | Vercel URL live | Ping |
+| Wed ~4 PM | Frontend visibly hitting your APIs | Test with curl / Postman if he's slow |
 
 ### 9.6 When you're blocked
 
-- **Solidity compile error:** paste error into Antigravity with the code. It'll fix.
-- **Remix deploy fails "insufficient funds":** get more faucet ETH.
-- **zk.email SDK proof generation timing out:** switch `isLocal: false` in `createProver` config to use hosted proving.
-- **Supabase Realtime not firing:** confirm Realtime is enabled per-table in Supabase dashboard (Database → Replication).
-- **API route works locally, fails on Vercel:** 95% of the time it's a missing env var. Check Vercel dashboard → Settings → Environment Variables.
-- **Anything else broken for >45 min:** ping team lead, screen share.
+- **Solidity compile error:** paste the whole error + code into Antigravity. It'll fix in one shot.
+- **Remix deploy fails "insufficient funds":** more faucet ETH.
+- **MetaMask popup doesn't appear when you click Deploy:** make sure "Environment" in Remix's Deploy tab is set to "Injected Provider - MetaMask", not "Remix VM".
+- **`@zk-email/sdk` proof gen times out:** stop fighting it and ship the OTP fallback (§13.2). ZK is a "nice pitch," OTP is a "working demo." Working > nice.
+- **Supabase Realtime not firing:** Database → Replication → toggle ON per-table.
+- **API works locally, breaks on Vercel:** 95% missing env var. Check Vercel → Settings → Environment Variables. Redeploy after adding.
+- **Anything broken for >30 min:** ping team lead. Screen share. Do not silent-fail.
 
 ---
 
-## 10. Daily Sync Checkpoints (Team Lead's Monitoring Schedule)
+## 10. Daily Sync Checkpoints (light touch — we have 4h/day, not 10)
 
-You (team lead) run standups at these fixed times. Send a WhatsApp voice note or text with three questions:
-1. What did you finish since last check-in?
-2. What are you working on now?
-3. Any blockers?
+Only two sync points per day. Text in the Notion / shared chat: **done / doing / blocked.** 5 min max.
 
-| Day | Time | What to verify |
+| Day | Time | What must be true |
 |---|---|---|
-| Tue | 4:00 PM | Teammate did §5 setup, Supabase project created |
-| Tue | 8:00 PM | Supabase schema deployed, Solidity contract drafted |
-| Tue | 11:00 PM | Contract deployed to Base Sepolia, EAS schema UID exists |
-| Wed | 10:00 AM | Morning standup — plan the day |
-| Wed | 2:00 PM | `/api/attest` skeleton in place |
-| Wed | 6:00 PM | `/api/attest` and `/api/proposals` working locally |
-| Wed | 10:00 PM | End-of-day standup — end-to-end verify works |
-| Thu | 10:00 AM | Morning standup |
-| Thu | 3:00 PM | `/api/vote` working, sybil check confirmed |
-| Thu | 8:00 PM | Everything on Vercel prod |
-| Fri | 10:00 AM | Bug bash starts |
-| Fri | 6:00 PM | Etherscan verified |
-| Fri | 10:00 PM | Fallback flows tested |
-| Sat | 10:00 AM | Final smoke test |
-| Sat | 6:00 PM | Submission ready |
-| Sat | 10:00 PM | **SUBMITTED** on Devfolio |
+| Tue | end of day | Teammate: Supabase alive + contract deployed + EAS schema UID + Notion updated. TL: repo scaffolded + Vercel URL live. |
+| Wed | end of day | Teammate: `/api/attest` + `/api/vote` return real responses in prod. TL: `/proposals/[id]` renders real data + vote buttons wired to backend. |
+| Thu | end of day | **Demo loop works in prod.** Verify → open proposal → vote → try again → rejected. This is the P0 checkpoint. |
+| Fri | end of day | Demo video recorded, Canva deck done, no new code going in. |
+| Sat | 16:30 | **SUBMITTED on Devfolio.** Screenshot the confirmation. |
 
-**Rule:** If a checkpoint is missed by >2 hours without escalation, one of you calls the other on the phone. No exceptions. Silent failure is the #1 killer of hackathon teams.
+**Rule:** If a checkpoint slips by more than one calendar day → phone call, screen-share, one of you takes over the other's remaining work. Silent failure kills hackathons; this team has 4-hour days and zero slack.
 
 ---
 
@@ -911,18 +875,21 @@ Teammate takes over frontend polish. He has AGENTS.md, PRD, and can vibecode wit
 
 ---
 
-## 16. Final Rules of Engagement
+## 16. Final Rules of Engagement (4h/day edition)
 
-1. **The PRD is the source of truth.** If reality diverges, update the PRD in a commit.
-2. **No feature creep after Day 2.** New ideas go to a `FUTURE.md` file, not into the sprint.
-3. **Deploy every day.** If it's not on Vercel, it doesn't exist.
-4. **Test on a phone every day.** Judges use phones.
-5. **Commit every 90 minutes minimum.** Small commits, clear messages.
-6. **Sleep 7 hours minimum every night.** Sleepy hackers ship broken products.
-7. **Eat real meals.** Not just Maggi.
-8. **When you disagree, defer to the PRD.** When PRD is ambiguous, team lead decides.
-9. **Have fun.** If you both hate it by Wednesday, we're building the wrong thing. Say something.
+1. **The demo loop is sacred. Everything else is optional.** Landing → verify → vote → double-vote-rejected. If a task doesn't advance this loop before Sat morning, skip it.
+2. **The PRD is the source of truth.** If a §2 feature isn't in "MUST SHIP," don't build it.
+3. **No new features after Thu evening.** Fri = video + slides + bug fixes. Sat = submit.
+4. **Deploy every day.** If it's not on Vercel, it doesn't exist.
+5. **Test on a phone every day.** 30 seconds. Judges use phones.
+6. **Commit every session end.** Even if broken. Message format: `[FE|BE|CT|DX] what changed`.
+7. **Sleep 7+ hours.** You have 4-hour days; ruining Sat with fatigue costs you the submission.
+8. **Eat real meals.** Not just Maggi.
+9. **Under-scope hard. Over-deliver.** Every optional feature we don't build is 30 min more polish or sleep for Sat.
+10. **When you disagree, defer to the PRD.** When PRD is ambiguous, team lead decides.
+11. **If Antigravity/Cursor makes a change and you don't understand it — reject.** Vibecoders shipping unreviewed code lose Sat to debugging.
+12. **Have fun.** If you both hate it by Wednesday, we're building the wrong thing. Say something.
 
 ---
 
-**Now go build. Ship on Aug 22. Win.**
+**Now go build. Ship Sat Aug 22 by 5 PM. Nothing else matters.**

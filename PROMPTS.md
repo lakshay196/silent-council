@@ -53,70 +53,87 @@ Create a file named `.cursorrules` in `frontend/` with this content:
 - Judge-facing polish > developer ergonomics.
 ```
 
-### Step 2 — First-day kickoff prompt (paste into Cursor Composer, Day 0, ~3 PM)
+### Step 2 — Day 0 kickoff prompt (paste into Cursor Composer, Tue Aug 18)
 
 ```
-I'm the team lead building Silent Council for the Road to Devcon NITK hackathon. Read PRD.md (@PRD.md) end to end before responding.
+I'm the team lead building Silent Council for the Road to Devcon NITK hackathon. Read PRD.md (@PRD.md) — focus on §0, §2, §5, §7, §8.3 Day 0.
 
-My role is per PRD §8. Today is Day 0 (Tue Aug 18). I have ~10 hours until midnight.
+My role is per PRD §8. Today is Day 0. I have ~4 hours total, so we ship the SKELETON only: scaffold + wallet + landing page shell + Vercel deploy. Feature cuts per PRD §2 "CUT" list — do NOT install framer-motion, canvas-confetti, or recharts.
 
-Do these tasks in order, one commit per task:
+Do these tasks in order, one commit per task. Do not proceed to the next until I confirm.
 
 1. Bootstrap the frontend inside `frontend/`:
-   - Run `npx create-next-app@latest frontend --typescript --tailwind --app --eslint --src-dir=false --import-alias='@/*' --no-turbopack`
+   - `npx create-next-app@latest frontend --typescript --tailwind --app --eslint --src-dir=false --import-alias='@/*' --no-turbopack`
    - Say yes to defaults.
-   - Wait for it to finish.
 
-2. cd into frontend, then install deps:
-   - `npm install wagmi viem @rainbow-me/rainbowkit @tanstack/react-query @supabase/supabase-js @zk-email/sdk framer-motion canvas-confetti recharts date-fns clsx tailwind-merge`
-   - `npm install -D @types/canvas-confetti`
+2. `cd frontend`, then install ONLY these deps (no animations, no charts):
+   - `npm install wagmi viem @rainbow-me/rainbowkit @tanstack/react-query @supabase/supabase-js @zk-email/sdk date-fns clsx tailwind-merge sonner`
 
 3. Set up shadcn/ui:
-   - `npx shadcn@latest init` — pick: TypeScript yes, style "Default", base color "Slate", CSS variables yes, tailwind.config.ts, components/ui, utils lib/utils.
-   - Install a starter set: `npx shadcn@latest add button card badge dialog input textarea select label toast sonner separator skeleton avatar`
+   - `npx shadcn@latest init` — TypeScript yes, style "Default", base color "Slate", CSS variables yes.
+   - `npx shadcn@latest add button card badge dialog input textarea select label separator skeleton`
 
-4. Create `frontend/lib/types.ts` with the TypeScript types per PRD §7.5. Include everything: ProposalCategory, Proposal, VerifiedUser, VOTE_CHOICES, VoteChoice.
+4. Create `frontend/lib/types.ts` with all types per PRD §7.5 (ProposalCategory, Proposal, VerifiedUser, VOTE_CHOICES, VoteChoice).
 
-5. Create `frontend/lib/contracts.ts` with a placeholder for the SilentCouncil contract address (import from env var), a placeholder ABI array (empty for now — teammate will supply Day 1), and the EAS Base Sepolia address 0x4200000000000000000000000000000000000021.
+5. Create `frontend/lib/contracts.ts` — export `SILENT_COUNCIL_ADDRESS` (from `process.env.NEXT_PUBLIC_SILENT_COUNCIL_ADDRESS`), an empty `SILENT_COUNCIL_ABI = [] as const` (teammate fills tonight), and `EAS_ADDRESS = "0x4200000000000000000000000000000000000021"`.
 
-6. Create `frontend/lib/supabase.ts` — export a `supabase` client using createClient with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY env vars.
+6. Create `frontend/lib/supabase.ts` — `createClient` with the two NEXT_PUBLIC env vars.
 
-7. Create `frontend/lib/zk-email.ts` — stub the zk.email SDK integration. Just re-export `initZkEmailSdk` with a `getSdk()` helper. We'll flesh it out later.
+7. Create `frontend/.env.example` with every var per PRD §7.1.
 
-8. Create `frontend/.env.example` with all vars per PRD §7.1.
+8. Create empty stub route files (so teammate's edits don't conflict):
+   - `frontend/app/api/attest/route.ts` — export a POST that returns `{ ok: false, error: 'not_implemented', message: 'stub' }`
+   - `frontend/app/api/vote/route.ts` — same
+   - `frontend/app/api/proposals/route.ts` — same
 
-9. Set up wagmi + RainbowKit for Base Sepolia:
-   - Create `frontend/app/providers.tsx` — wraps children in WagmiProvider, RainbowKitProvider (darkTheme), QueryClientProvider.
-   - Update `frontend/app/layout.tsx` to wrap children in <Providers>.
+9. Wire wagmi + RainbowKit for Base Sepolia (chainId 84532):
+   - `frontend/app/providers.tsx` wrapping WagmiProvider + RainbowKitProvider (darkTheme) + QueryClientProvider.
+   - Update `frontend/app/layout.tsx` to wrap children in `<Providers>`.
+   - Add a top-nav `<ConnectButton />` from RainbowKit.
 
-10. Ask me for a `.env.local` file to test locally — provide reasonable defaults.
+10. Build a minimal landing page at `frontend/app/page.tsx`:
+   - Dark background, indigo/violet gradient
+   - Title "Silent Council" (huge)
+   - Subtitle: "Onchain voting for NITK. Verified voters, secret ballots, public tallies."
+   - Primary CTA "Verify with NITK email" → `/verify` (page doesn't exist yet — dead link is fine)
+   - Secondary CTA "See live proposals" → `/proposals`
+   - Below the fold: three hardcoded proposal `<Card>`s (title + one-line description + fake counts). Static, no animations, no fake stat counters.
+   - Footer: GitHub link + "Built at Road to Devcon NITK Surathkal"
+   - Mobile responsive
 
-STOP after step 10 and confirm with me before moving to landing page work.
+STOP after step 10. I'll deploy to Vercel manually and confirm the URL loads, then we can build the proposal detail page tomorrow.
 ```
 
-### Step 3 — Landing page prompt (Day 0, ~7 PM)
+### Step 3 — Day 1 (Wed) prompt: proposal detail page
 
 ```
-Per PRD §2 feature 1 and PRD §8.3 Day 0 timeline, build the landing page.
+Read @PRD.md §2 (MUST SHIP items 3-4), §7.2, §7.5. Today is Day 1 (Wed) — I have ~4h. Build the proposal detail page + wire real Supabase reads. Don't build category filters, search, deadline countdowns, or the feed page yet.
 
-Requirements:
-- Route: `frontend/app/page.tsx`
-- Full-screen hero, dark theme with indigo/violet gradient background
-- Big title "Silent Council" (Geist Bold, huge)
-- Subtitle: "Onchain voting for NITK. Verified voters, secret ballots, public tallies."
-- Primary CTA: "Verify with your NITK email" (Button component, size lg, shadcn Button variant="default", links to /verify)
-- Secondary CTA: "See live proposals" (variant="outline", links to /proposals)
-- Animated stat counters (use Framer Motion or a simple CSS transition):
-  - "1,247 verified students" (fake for now, wire real data later)
-  - "23 active proposals"
-  - "12 sybil attempts blocked" (with 🛡️ emoji)
-- Below the fold: "How it works" section with 3 cards (Verify · Vote · Verify Others), each with an icon (lucide-react)
-- Footer with GitHub link, EAS attestation link (placeholder for now), and "Built at Road to Devcon NITK Surathkal"
-- Full mobile responsiveness
+1. Create `frontend/components/tally-bar.tsx`:
+   - Takes props `{ yes: number; no: number; abstain: number }`
+   - Renders three coloured divs (green/red/gray) side-by-side, widths as % of total
+   - Count labels inline
+   - Plain CSS. No Recharts, no Framer Motion. Under 40 lines.
 
-Inspiration: linear.app, vercel.com. Feel professional and cryptographic.
+2. Create `frontend/app/proposals/[id]/page.tsx`:
+   - Server component if possible
+   - Fetches proposal from Supabase: `supabase.from('proposals').select('*').eq('id', params.id).single()`
+   - Shows title, description, category badge
+   - `<TallyBar yes={p.tally_yes} no={p.tally_no} abstain={p.tally_abstain} />`
+   - Three buttons: Yes / No / Abstain
+   - Client component wraps the buttons; on click, calls `fetch('/api/vote', { method: 'POST', body: JSON.stringify({ wallet, proposalId: p.onchain_id, choice }) })`
+   - Show sonner toast on success (tx hash) or error (per PRD §7.4 error enum)
 
-After building, commit with `[FE] landing page hero`. Then push. Confirm with me.
+3. Create `frontend/app/verify/page.tsx`:
+   - Client component
+   - "Connect wallet" (uses RainbowKit connect button state) + "Verify NITK Email" button
+   - On click: for now, POST to `/api/attest` with `{ wallet, zkEmailProof: 'mock', publicInputs: {} }` — teammate's endpoint will accept mock in dev
+   - Show success/error status text
+   - Add green ✓ badge to top nav if `useReadContract` on `isVerified(address)` returns true (safe-guard: if ABI is empty, render nothing)
+
+Do NOT build /dashboard, /verifiability, /pitch, or /proposals (feed page). Those are cut per PRD §2.
+
+Commit each file as you go: `[FE] tally-bar`, `[FE] proposal detail page`, `[FE] verify page`.
 ```
 
 ### Step 4 — Daily kickoff prompt template (paste each morning)
@@ -220,31 +237,100 @@ You are the Contracts + Backend engineer per PRD §9. You own:
 - Do NOT change env var names or API signatures without updating PRD.
 ```
 
-### Step 3 — First-message bootstrap prompt (paste into Antigravity, Day 0, ~3 PM)
+### Step 3 — Day 0 bootstrap prompt (paste into Antigravity, Tue Aug 18)
 
 ```
-Read @PRD.md and @AGENTS.md completely before responding.
+Read @PRD.md — focus on §7, §9.3 Day 0, §13. Read @AGENTS.md.
 
-I'm the Contracts + Backend engineer for Silent Council. My role and timeline are per PRD §9.
+I'm the Contracts + Backend engineer for Silent Council. Today is Day 0 (Tue Aug 18). I have ~4 hours. Per PRD §9.3 Day 0, my deliverables by end of today:
 
-Today is Day 0 (Tue Aug 18, 2026). I have ~10 hours until midnight. My deliverables by end of today per PRD §9.3:
+1. Supabase project alive with schema per §7.2 + Realtime enabled on `votes` + `proposals`
+2. `contracts/SilentCouncil.sol` drafted per §7.3
+3. Contract deployed to Base Sepolia via Remix
+4. Contract address + ABI pasted into `frontend/lib/contracts.ts`
+5. EAS schema created at easscan.org, UID in `.env.example`
+6. Everything shared with team lead in shared Notion
 
-1. Supabase project created, schema deployed per PRD §7.2, Realtime enabled on `votes` and `proposals` tables
-2. Solidity contract `contracts/SilentCouncil.sol` drafted per PRD §7.3
-3. Contract deployed to Base Sepolia via Remix IDE
-4. Contract address + ABI added to `frontend/lib/contracts.ts`
-5. EAS schema created via base-sepolia.easscan.org, UID saved
-6. `.env.example` updated with EAS schema UID
-7. Everything shared with team lead
+I will do the manual browser clicks myself (Supabase setup, Remix deploy, EAS schema creation) following the checklists in @PROMPTS.md "Teammate manual steps." You handle the code: draft the Solidity contract per PRD §7.3, review my paste-back of the address/ABI, and stand by for API route work on Wednesday.
 
-Use Planning Mode. Present me with a detailed plan for the next 4 hours (through 7 PM):
-- What order will you do these tasks?
-- Which do you need my input for (e.g., account credentials)?
-- Which can you generate autonomously (e.g., drafting Solidity)?
+Use Planning Mode. Give me a plan for these 4 hours:
+- Which tasks need my manual clicks vs your codegen?
+- What order?
 - What's your rollback if a step fails?
 
-DO NOT execute yet. Wait for my approval of the plan.
+DO NOT execute code yet. Wait for approval.
 ```
+
+---
+
+### 🖱️ TEAMMATE MANUAL STEPS — click-by-click checklists
+
+These are the browser steps Antigravity cannot do for you. Total time: ~30 min if you don't get distracted.
+
+#### 3a. Supabase setup (10 min)
+
+1. Go to [supabase.com](https://supabase.com) → Sign in with GitHub
+2. Click **New Project**
+3. Fill: name `silent-council`, database password (generate + save to Notion), region `Southeast Asia (Mumbai)` or nearest
+4. Click **Create new project**. Wait ~2 min for provisioning.
+5. Left sidebar → **SQL Editor** → click **New query**
+6. Copy the entire SQL block from PRD §7.2 (starts with `create table proposals`). Paste. Click **Run**. Should say "Success. No rows returned."
+7. Left sidebar → **Database** → **Replication** → find the `supabase_realtime` publication → toggle ON for both `proposals` and `votes` tables
+8. Left sidebar → **Project Settings** (gear icon) → **API**
+9. Copy these three values into the shared Notion:
+   - **Project URL** (looks like `https://xxxxxxxxxxx.supabase.co`)
+   - **anon public** key (long `eyJ...` string)
+   - **service_role** key (different long `eyJ...` string) — **secret, never commit**
+10. Also paste the SQL from PRD §9.3 Day 1 seed proposals block. This creates 3 demo proposals so the frontend has something to render.
+
+#### 3b. Remix contract deploy (10 min — do AFTER Antigravity drafts the .sol file)
+
+1. Go to [remix.ethereum.org](https://remix.ethereum.org). Wait for it to load.
+2. Left sidebar → **File Explorer** icon → in the `contracts/` folder, click **New File** → name it `SilentCouncil.sol`
+3. Paste the contract Antigravity drafted (from your local `contracts/SilentCouncil.sol`)
+4. Left sidebar → **Solidity Compiler** icon (looks like a Solidity logo). Set compiler version to **0.8.20**. Click **Compile SilentCouncil.sol**. Should show green ✓. If it errors, copy the whole error → paste into Antigravity → apply the fix → repeat.
+5. Left sidebar → **Deploy & run transactions** icon (Ethereum logo).
+6. **Environment** dropdown → select **"Injected Provider - MetaMask"**. MetaMask popup appears → click **Next / Connect**. Confirm the account shown is your fresh Base Sepolia account (NOT your mainnet account).
+7. Confirm the network at the top says **"Base Sepolia (84532)"**. If it says something else, switch networks in MetaMask first.
+8. **Contract** dropdown → select `SilentCouncil`.
+9. If the constructor takes arguments (issuer address, initial owner): paste your MetaMask address (the same wallet) into both boxes. Both are just you for this hackathon.
+10. Click orange **Deploy** button → MetaMask popup → **Confirm**. Wait ~15 seconds for the tx.
+11. Scroll down in Remix → under **Deployed Contracts** → click the copy icon next to the deployed address. **This is your contract address.** Paste into Notion + `frontend/lib/contracts.ts` `SILENT_COUNCIL_ADDRESS`.
+12. Go back to Solidity Compiler tab → scroll down → **ABI** section → click clipboard icon. Paste as `SILENT_COUNCIL_ABI` value in `frontend/lib/contracts.ts` (replacing the empty `[]`).
+13. Also seed 3 on-chain proposals: expand the deployed contract in Remix → find `createProposal` → paste each title/description/category/deadline (unix timestamp, use [epochconverter.com](https://www.epochconverter.com)) → click write → sign popup. Copy the returned proposalId, use it as the `onchain_id` in Supabase.
+14. Commit + push `lib/contracts.ts`. Ping team lead: "contract deployed at 0x…, ABI pushed."
+
+#### 3c. EAS schema (3 min)
+
+1. Go to [base-sepolia.easscan.org/schema/create](https://base-sepolia.easscan.org/schema/create)
+2. Connect MetaMask (same account, Base Sepolia)
+3. **Schema** field: paste exactly `address wallet, string domain, bytes32 nullifier`
+4. **Resolver**: leave blank (`0x0000000000000000000000000000000000000000`)
+5. **Revocable**: check the box
+6. Click **Create Schema** → MetaMask popup → **Confirm**. Wait ~10s.
+7. When it lands, the page shows the schema UID (a `0x...` 64-char hex). Copy it.
+8. Paste as `NEXT_PUBLIC_EAS_SCHEMA_UID=0x...` in `.env.example` + Notion. Commit + push.
+
+#### 3d. Vercel env vars (5 min — do this AFTER team lead has deployed the frontend to Vercel)
+
+Team lead will share the Vercel project URL. Once he does:
+
+1. Go to [vercel.com/dashboard](https://vercel.com/dashboard) → click the `silent-council` project → **Settings** → **Environment Variables**
+2. Add each of these (from PRD §7.1). For **secret** ones (no `NEXT_PUBLIC_` prefix), only check "Production" + "Preview" scopes; for public ones check all three:
+   - `NEXT_PUBLIC_CHAIN_ID` = `84532`
+   - `NEXT_PUBLIC_RPC_URL` = `https://sepolia.base.org`
+   - `NEXT_PUBLIC_SILENT_COUNCIL_ADDRESS` = your deployed address
+   - `NEXT_PUBLIC_EAS_ADDRESS` = `0x4200000000000000000000000000000000000021`
+   - `NEXT_PUBLIC_EAS_SCHEMA_UID` = your schema UID
+   - `NEXT_PUBLIC_SUPABASE_URL` = your Supabase URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon key
+   - `SUPABASE_SERVICE_ROLE_KEY` = your service role key (secret)
+   - `ISSUER_PRIVATE_KEY` = your Issuer MetaMask account's private key (secret — the second account, not your main one)
+   - `NEXT_PUBLIC_ALLOWED_DOMAIN` = `nitk.edu.in`
+   - `NEXT_PUBLIC_DOMAIN_SALT` = `silent-council-nitk-v1`
+3. Click **Deployments** tab → three dots on the latest deployment → **Redeploy** so the env vars take effect.
+
+**⚠️ Wallet safety:** the `ISSUER_PRIVATE_KEY` is a private key. Anyone with it can sign attestations as you. That's why the Issuer wallet is a fresh MetaMask account with zero real ETH — the worst-case blast radius is somebody spoofs "verified NITK" attestations, not stealing real money.
 
 ### Step 4 — Contract drafting prompt (Day 0, ~5 PM, after Supabase is done)
 

@@ -8,6 +8,14 @@ Silent Council is a ZK-verified onchain student voting app for NITK, built for t
 
 The full product spec is in `PRD.md` at the workspace root. Read it before every major task.
 
+## Time budget (READ THIS FIRST)
+
+The team has **~4 hours/day Tue–Fri + ~10 hours Sat**, total ~26h each, ~52h combined. Submission deadline is **Sat Aug 22, 5 PM IST**.
+
+This means: **the demo loop is the entire product.** Any feature not in PRD §2 "MUST SHIP" is CUT unless the loop is fully working in prod by Fri 6 PM. Do not build `/dashboard`, `/verifiability`, `/pitch`, animated stat counters, Framer Motion transitions, canvas-confetti, Recharts tally charts, category filters, or Etherscan verification. Do not install those dependencies.
+
+When in doubt: read PRD §2 (updated feature list) and PRD §16 (updated final rules).
+
 ## Team
 
 - **Team Lead (Lakshay)** — Frontend, design, pitch, coordination. Uses Cursor Pro. Owns per PRD §8.
@@ -78,22 +86,26 @@ If any of these change, the OTHER teammate is blocked. Coordinate before modifyi
 
 ## Priorities (in order)
 
-1. Interface contracts (PRD §7) stay stable
-2. Ship the MVP by Aug 22 night
-3. Working demo > perfect code
-4. Judge-facing polish > developer ergonomics
-5. Everything mobile-responsive
-6. If in doubt, ship it and note tech debt in FUTURE.md
+1. **The demo loop is sacred.** Verify → open proposal → vote → double-vote-rejected. Everything else is optional.
+2. Interface contracts (PRD §7) stay stable
+3. Submit on Sat Aug 22 by 5 PM — partial > polished-but-late
+4. Working demo > perfect code
+5. Judge-facing polish > developer ergonomics
+6. Everything mobile-responsive (30-second phone check daily)
+7. If in doubt, ship it and note tech debt in `FUTURE.md`
 
 ## What NOT to do (hard rules)
 
-- ❌ Do NOT write custom ZK circuits
+- ❌ Do NOT build anything outside PRD §2 "MUST SHIP" (six items) unless the loop is fully working in prod by Fri 6 PM
+- ❌ Do NOT install `framer-motion`, `canvas-confetti`, or `recharts` — they were cut
+- ❌ Do NOT write custom ZK circuits — use `@zk-email/sdk` with an existing registry blueprint, or the OTP fallback (PRD §13.2)
 - ❌ Do NOT touch `/verifier/` or `/examples/` (friend's SP1 repo)
 - ❌ Do NOT add new dependencies without approval
 - ❌ Do NOT deploy to any chain other than Base Sepolia
 - ❌ Do NOT change env var names or API signatures without updating PRD first
 - ❌ Do NOT commit `.env.local` or private keys — check `.gitignore` includes both
 - ❌ Do NOT skip Planning Mode for multi-file work
+- ❌ Do NOT let a task run over its allotted time by >30 min without escalating — cut the next optional item instead
 
 ## When you don't know
 
