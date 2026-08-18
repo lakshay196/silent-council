@@ -19,6 +19,38 @@ If this Cursor window is still in the SP1 folder: **File → Open Folder → `si
 
 ---
 
+## Git: when Krishna pulls (read this)
+
+Git is a shared Google Drive for code. **Push** = upload. **Pull** = download.
+
+**Krishna does not pull after every keystroke.** He pulls when **you have pushed** and he is about to work.
+
+| When | Who | What |
+|---|---|---|
+| You finished a Cursor session and ran `git push` | You | WhatsApp: **"pushed, pull"** |
+| Krishna sits down to code (start of his 4h) | Krishna | `git pull` **first** |
+| Krishna finished and pushed | Krishna | WhatsApp: **"pushed, pull"** |
+| You sit down again | You | `git pull` **first** |
+
+If nobody new was pushed, pull does nothing — that's fine.
+
+**You (Mac), in Terminal:**
+
+```bash
+cd ~/devcon/silent-council
+git pull
+# ... Cursor works, then:
+git add .
+git commit -m "[FE] what changed"
+git push
+```
+
+Then text Krishna: `pushed, pull`
+
+**If `git push` says rejected:** you forgot to pull. Run `git pull` then `git push` again.
+
+---
+
 ## Are the docs on GitHub? Yes.
 
 Krishna can already see them here (no extra pull needed if he clones now):

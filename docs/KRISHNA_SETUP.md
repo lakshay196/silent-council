@@ -69,6 +69,49 @@ Antigravity will read `AGENTS.md` automatically — that's your project rules.
 
 ---
 
+## Git: pull vs push (do this every session)
+
+The repo is shared. Lakshay uploads with **push**. You download with **pull**.
+
+**Pull every time you sit down to work** — and whenever Lakshay texts **"pushed, pull"**.
+
+You do **not** pull after every file he edits. Only after he **pushes**, or at the start of your work block.
+
+### Start of every work session (Git Bash)
+
+```bash
+cd ~/Desktop/silent-council
+git pull
+```
+
+Wait until it finishes. Then open Antigravity / paste today's prompt.
+
+### When you finish your work
+
+```bash
+cd ~/Desktop/silent-council
+git add .
+git commit -m "[CT] short description"
+git push
+```
+
+Then WhatsApp Lakshay: **pushed, pull**
+
+### If `git push` fails with "rejected"
+
+Lakshay pushed something you don't have yet. Run:
+
+```bash
+git pull
+git push
+```
+
+If Git Bash asks you to merge and opens a text editor: save and close it (`Esc` then `:wq` then Enter in vim), or close the window and message Lakshay.
+
+**Never WhatsApp code files.** Only push to GitHub.
+
+---
+
 ## STEP 5 — Shared Notion page (3 min)
 
 1. Lakshay will share a Notion page called **"Silent Council Keys"**
