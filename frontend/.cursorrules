@@ -1,0 +1,40 @@
+# Silent Council — Cursor Rules
+
+## Project
+- This is the frontend for Silent Council, a ZK-verified onchain student voting app for NITK.
+- Read PRD.md at the workspace root before making architectural decisions.
+- We are pure vibecoders; explain your changes in plain English.
+
+## Stack (do NOT deviate)
+- Next.js 15 App Router + TypeScript (strict)
+- Tailwind CSS 4 + shadcn/ui
+- wagmi v2 + viem + RainbowKit
+- @zk-email/sdk (call site: `frontend/lib/zk-email.ts`)
+- @supabase/supabase-js (call site: `frontend/lib/supabase.ts`)
+- Chain: Base Sepolia (chainId 84532), RPC https://sepolia.base.org
+
+## Conventions
+- All shared types live in `frontend/lib/types.ts`. Import from there, never redefine.
+- Contract ABI + address live in `frontend/lib/contracts.ts`.
+- API routes match PRD §7.4 signatures EXACTLY. If a signature seems wrong, ask; do not silently deviate.
+- No `any` types. Use `unknown` and narrow.
+- No inline styles. Tailwind only.
+- Prefer shadcn/ui components before hand-rolling.
+- Dark theme by default. Indigo/violet accent.
+- Every page must be mobile-responsive.
+
+## Behavior
+- Before creating a new file, check if a similar file exists. Extend instead of duplicate.
+- After edits, run `npm run build` mentally — flag TypeScript errors before committing.
+- Do NOT install new dependencies without asking me first.
+- Do NOT touch anything under `/verifier/`, `/examples/`, or `/contracts/` — those are the teammate's turf or the friend's SP1 repo.
+- Commit messages: `[FE] <what changed>`. Keep <60 chars.
+
+## When you don't know
+- Reference PRD.md sections explicitly, e.g., "per PRD §7.4."
+- If PRD is ambiguous, ask before guessing.
+
+## What to prioritize
+- Shipping > perfection.
+- Working demo > code quality.
+- Judge-facing polish > developer ergonomics.
