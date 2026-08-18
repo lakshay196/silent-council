@@ -236,6 +236,8 @@ git push
 
 **You are done for Tuesday.** Close the laptop. Do not start API routes tonight.
 
+**Wednesday domain rule:** `/api/attest` must allow **both** `nitk.edu.in` and `gmail.com` (`NEXT_PUBLIC_ALLOWED_DOMAINS`). Pitch is NITK; you and Lakshay demo with Gmail. Reject every other domain.
+
 ---
 
 ## After this guide — one sentence per day

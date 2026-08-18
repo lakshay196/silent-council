@@ -17,6 +17,8 @@ You currently have two folders. Only one is the real project.
 
 If this Cursor window is still in the SP1 folder: **File → Open Folder → `silent-council`**.
 
+**Demo emails:** landing still says NITK. Backend allows `nitk.edu.in` **and** `gmail.com`. You demo with Gmail. Tell judges that in one sentence. Tuesday work is unchanged except `.env.example` uses `NEXT_PUBLIC_ALLOWED_DOMAINS`.
+
 ---
 
 ## Git: when Krishna pulls (read this)

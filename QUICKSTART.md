@@ -15,6 +15,8 @@ The **90-second demo loop**, nothing else:
 
 **Verify NITK email → open a proposal → vote → try to vote again → get rejected.**
 
+Pitch stays NITK. Demo also allows **Gmail** (`NEXT_PUBLIC_ALLOWED_DOMAINS=nitk.edu.in,gmail.com`) because we are not NITK students. Judges hear one honest sentence; we verify with Gmail on camera.
+
 That's the whole product. If it's not in that sentence, it's cut (see PRD §2 "CUT" list).
 
 ---

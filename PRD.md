@@ -61,6 +61,18 @@ Adopt it for the next NITK student council election. Any student club can spin u
 
 That's the entire product. Verify → open proposal → vote → try again → rejected. **Six items. Do only these until Sat morning.**
 
+### Demo domains (hackathon — we are not NITK students)
+
+**Pitch and UI copy stay NITK.** Landing CTA: "Verify with NITK email." Story: built for NITK student council.
+
+**The backend allows two domains** via `NEXT_PUBLIC_ALLOWED_DOMAINS=nitk.edu.in,gmail.com`:
+- `@nitk.edu.in` — production / the product we describe
+- `@gmail.com` — so Lakshay, Krishna, and online judges can demo without an NITK inbox
+
+One app. One contract. Same nullifier flow. `/api/attest` (and OTP fallback) reject any other domain (`wrong_domain`).
+
+**Say this in the demo (10s):** *"Production would only accept nitk.edu.in. For this judging demo we also allow Gmail so you can try it."* Do not pretend the Gmail account is an NITK student.
+
 ### SHOULD SHIP (only if the demo loop is fully working by Fri 6 PM)
 
 7. **Proposals feed page** at `/proposals` — grid of cards. If the demo loop works, add this Fri evening.
@@ -88,7 +100,7 @@ That's the entire product. Verify → open proposal → vote → try again → r
 - Custom ZK circuits. **Use zk.email's SDK as-is.**
 - Custom RSA/JWT verification in a zkVM. **We are not doing this.**
 - Multiple chains. **Base Sepolia only.**
-- Multiple colleges/domains on the frontend. **Hardcode `nitk.edu.in` — mention "extensible" in pitch.**
+- Multiple colleges as a product. **Allow-list only `nitk.edu.in` + `gmail.com` (demo). No college picker UI. Pitch: swap the env var for any campus.**
 - Native mobile app. **Web only — must be mobile-responsive.**
 - User accounts / login system. **Wallet + attestation is the identity.**
 
@@ -158,10 +170,10 @@ That's the entire product. Verify → open proposal → vote → try again → r
 1. User clicks **Verify with NITK email**.
 2. wagmi connects wallet (MetaMask).
 3. `@zk-email/sdk` initializes; user grants Gmail permission (OAuth).
-4. SDK fetches an email that matches our blueprint (a Google-sent verification / welcome email at their `@nitk.edu.in` address, DKIM-signed by Google).
-5. SDK generates a proof server-side (via zk.email Prover Network — ~20s). Proof asserts: *"holder controls an email at `nitk.edu.in`."*
+4. SDK fetches an email that matches our blueprint (a Google-sent message; DKIM-signed by Google). For the live demo this is usually a **Gmail** inbox; production story is `@nitk.edu.in`.
+5. SDK generates a proof server-side (via zk.email Prover Network — ~20s). Proof asserts the holder controls an email at a domain we allow (`nitk.edu.in` or `gmail.com`).
 6. Proof + public inputs sent to `/api/attest` on our Next.js API.
-7. Backend verifies the proof via zk.email; computes a **nullifier** = `keccak256(email_address_from_public_input || DOMAIN_SALT)`.
+7. Backend verifies the proof via zk.email; **rejects if the email domain is not in `NEXT_PUBLIC_ALLOWED_DOMAINS`**; computes a **nullifier** = `keccak256(email_address_from_public_input || DOMAIN_SALT)`.
 8. Backend signs `{wallet, nullifier}` with our issuer key; frontend submits to `SilentCouncil.sol` which stores the wallet-to-nullifier binding and mints an EAS attestation.
 9. User is now **Verified NITK** — green badge appears.
 10. User opens a proposal, clicks **Vote Yes**.
@@ -285,7 +297,8 @@ ISSUER_PRIVATE_KEY=0x...                  # teammate
 ZK_EMAIL_API_KEY=optional...              # teammate (if zk.email requires one)
 
 # --- App config ---
-NEXT_PUBLIC_ALLOWED_DOMAIN=nitk.edu.in
+# Comma-separated. Pitch = NITK. Demo also allows Gmail (we are not NITK students).
+NEXT_PUBLIC_ALLOWED_DOMAINS=nitk.edu.in,gmail.com
 NEXT_PUBLIC_DOMAIN_SALT=silent-council-nitk-v1
 ```
 
@@ -415,6 +428,8 @@ Response (error):
 { ok: false; error: 'invalid_proof' | 'wrong_domain' | 'already_verified' | 'server_error'; message: string }
 ```
 
+**Domain check (required):** extract the email from proof public inputs, take the part after `@`, lowercase it. It MUST be in `NEXT_PUBLIC_ALLOWED_DOMAINS` split on commas (`nitk.edu.in` and `gmail.com`). Otherwise return `wrong_domain`. Do not accept yahoo/outlook/etc.
+
 #### `POST /api/proposals`
 Request:
 ```ts
@@ -478,6 +493,15 @@ export interface VerifiedUser {
 
 export const VOTE_CHOICES = { YES: 0, NO: 1, ABSTAIN: 2 } as const;
 export type VoteChoice = 0 | 1 | 2;
+
+/** Split NEXT_PUBLIC_ALLOWED_DOMAINS on commas. Default: NITK + Gmail for demo. */
+export function parseAllowedDomains(raw: string | undefined): string[] {
+  const fallback = 'nitk.edu.in,gmail.com';
+  return (raw ?? fallback)
+    .split(',')
+    .map((d) => d.trim().toLowerCase())
+    .filter((d) => d.length > 0);
+}
 ```
 
 ---
@@ -665,7 +689,7 @@ Goal: **`/api/attest` and `/api/vote` return real responses in prod (mock proof 
 | Time | Task |
 |---|---|
 | 0:15 | Check Notion for team lead's asks. Pull latest. |
-| 1:45 | Ask Antigravity (Planning Mode) to write `frontend/app/api/attest/route.ts` per PRD §7.4. Skip real zk.email proof verification for now — accept any proof in dev, focus on: nullifier computation, issuer signing, contract call via viem, Supabase insert, response shape. Deploy to Vercel. |
+| 1:45 | Ask Antigravity (Planning Mode) to write `frontend/app/api/attest/route.ts` per PRD §7.4. Skip real zk.email for now — accept mock proof in dev. **Must check email domain against `NEXT_PUBLIC_ALLOWED_DOMAINS` (`nitk.edu.in,gmail.com`)** → else `wrong_domain`. Then: nullifier, issuer signing, contract call, Supabase insert. Deploy to Vercel. |
 | 3:15 | Same for `frontend/app/api/vote/route.ts` per §7.4. Look up nullifier from `verified_users`, sign `{proposalId, nullifier, choice}`, call `SilentCouncil.vote()`, insert into `votes`. Deploy. |
 | 3:45 | curl-test both endpoints from your terminal. Fix env var / Vercel issues. Ping team lead the deployed URL. |
 
@@ -689,7 +713,7 @@ Goal: **integrate real ZK proof verification OR ship the OTP fallback (§13.2). 
 |---|---|
 | 0:15 | Standup with team lead. Confirm frontend calls your APIs and you can see requests in Vercel logs. |
 | 2:00 | Wire the real `@zk-email/sdk` proof verification in `/api/attest`. Reuse blueprint `udp/gmail-domain-proof` from the zk.email registry — do NOT write a circuit. Test with your own Gmail. |
-| 2:30 | If proof gen > 60s or blueprint doesn't fit: **switch to OTP fallback now**. Ship `/api/verify-otp` (Resend or Supabase-Auth-Email for the 6-digit code, hash email → nullifier, sign, call contract). Team lead swaps the frontend button. 45 min of work with Antigravity. |
+| 2:30 | If proof gen > 60s or blueprint doesn't fit: **switch to OTP fallback now**. Ship `/api/verify-otp` (same domain allow-list: nitk.edu.in + gmail.com). Team lead swaps the frontend button. 45 min with Antigravity. |
 | 3:30 | End-to-end test on prod with team lead. Verify → vote → double-vote-rejected loop must work. |
 | 4:00 | Bug fixes. Deploy. |
 
@@ -773,11 +797,11 @@ Only two sync points per day. Text in the Notion / shared chat: **done / doing /
 
 **[00:00]** "Every Indian college has a rigged, doxxable, or ignored voting system. WhatsApp polls leak identity. Paper ballots get lost. Nobody trusts it, nobody votes. We built the fix."
 
-**[00:15]** "Silent Council. Verified NITK students only, secret ballots, tallies on Ethereum. Watch."
+**[00:15]** "Silent Council. Built for NITK — verified voters, secret ballots, tallies on Ethereum. Watch."
 
-**[00:20]** *(click Verify)* "I connect my wallet. I click Verify. Behind the scenes, my Gmail sends a DKIM-signed message, a zero-knowledge proof asserts I own an @nitk.edu.in email — my actual email never leaves my browser."
+**[00:20]** *(click Verify)* "I connect my wallet. Production would only accept @nitk.edu.in. For this demo I verify with Gmail — same ZK proof, same on-chain vote. My actual email never shows up on chain."
 
-**[00:40]** *(attestation issued)* "Boom, an onchain attestation on Base Sepolia. You can verify this on EASscan right now. It says: 'this wallet controls a real NITK email' — but my email is nowhere in the proof."
+**[00:40]** *(attestation issued)* "Boom, an onchain attestation on Base Sepolia. You can check it on EASscan. It says this wallet proved a allowed-domain email — the address itself is not in the proof."
 
 **[00:55]** *(open proposal)* "Here's a real proposal: 'Extend mess hours to 11 PM.' I vote Yes. Transaction goes to our contract on Base."
 
@@ -814,7 +838,7 @@ Only two sync points per day. Text in the Notion / shared chat: **done / doing /
 
 ### 13.2 zk.email SDK completely broken / down
 
-**Fallback:** enable the email-OTP fallback (teammate builds Day 3). Flow: user enters `@nitk.edu.in` email, we email them a 6-digit code, they enter it, we compute nullifier = `hash(email + salt)` on our backend, sign attestation. **NOT zero-knowledge** — we see the email server-side. Pitch honestly: *"MVP falls back to email OTP if the ZK prover is down; production would use only the ZK path."*
+**Fallback:** enable the email-OTP fallback (Krishna builds if zk.email fails Thursday). Flow: user enters an email whose domain is in `NEXT_PUBLIC_ALLOWED_DOMAINS` (`nitk.edu.in` or `gmail.com`), we email a 6-digit code, they enter it, we compute nullifier = `hash(email + salt)` on our backend, sign attestation. **NOT zero-knowledge** — we see the email server-side. Pitch honestly: *"MVP falls back to email OTP if the ZK prover is down; production would use only the ZK path."* Reject `wrong_domain` the same as the ZK path.
 
 ### 13.3 Base Sepolia RPC down / congested
 

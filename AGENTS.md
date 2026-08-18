@@ -16,6 +16,8 @@ This means: **the demo loop is the entire product.** Any feature not in PRD §2 
 
 When in doubt: read PRD §2 (updated feature list) and PRD §16 (updated final rules).
 
+**Allowed email domains:** `nitk.edu.in` (product story) and `gmail.com` (hackathon demo). Env: `NEXT_PUBLIC_ALLOWED_DOMAINS`. UI copy stays NITK. Do not build a college picker.
+
 ## Team
 
 - **Team Lead (Lakshay)** — Frontend, design, pitch, coordination. Uses Cursor Pro. Owns per PRD §8.

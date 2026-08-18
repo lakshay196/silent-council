@@ -94,13 +94,13 @@ Do these tasks in order, one commit per task. Wait for my OK before the next.
    - npx shadcn@latest init — TypeScript yes, style Default, base color Slate, CSS variables yes.
    - npx shadcn@latest add button card badge dialog input textarea select label separator skeleton
 
-4. Create frontend/lib/types.ts with types per PRD §7.5 (ProposalCategory, Proposal, VerifiedUser, VOTE_CHOICES, VoteChoice).
+4. Create frontend/lib/types.ts with types per PRD §7.5 (ProposalCategory, Proposal, VerifiedUser, VOTE_CHOICES, VoteChoice, parseAllowedDomains).
 
 5. Create frontend/lib/contracts.ts — export SILENT_COUNCIL_ADDRESS from env, empty SILENT_COUNCIL_ABI = [] as const (Krishna fills tonight), EAS_ADDRESS = "0x4200000000000000000000000000000000000021".
 
 6. Create frontend/lib/supabase.ts — createClient with the two NEXT_PUBLIC env vars.
 
-7. Create frontend/.env.example with every var per PRD §7.1.
+7. Create frontend/.env.example with every var per PRD §7.1 (including NEXT_PUBLIC_ALLOWED_DOMAINS=nitk.edu.in,gmail.com).
 
 8. Create stub API route files:
    - frontend/app/api/attest/route.ts — POST returns { ok: false, error: 'not_implemented', message: 'stub' }
@@ -116,6 +116,7 @@ Do these tasks in order, one commit per task. Wait for my OK before the next.
     - Dark bg, indigo/violet gradient
     - Title "Silent Council", subtitle "Onchain voting for NITK. Verified voters, secret ballots, public tallies."
     - Primary CTA "Verify with NITK email" → /verify (dead link OK)
+    - Optional tiny subtitle under CTA: "Demo also accepts Gmail" — NITK branding stays, we are not NITK students
     - Secondary CTA "See live proposals" → /proposals
     - Three hardcoded proposal <Card>s below the fold — static, no animations, no fake counters
     - Footer: GitHub link + "Built at Road to Devcon NITK Surathkal"
@@ -153,8 +154,9 @@ Do ONLY this, in order. Commit after each. Wait for my OK before the next.
 4. Build frontend/app/verify/page.tsx:
    - Client component
    - RainbowKit connect button + "Verify NITK Email" button
+   - One line of helper text: "Production: @nitk.edu.in. This demo also accepts Gmail."
    - On click: POST /api/attest with { wallet, zkEmailProof: 'mock', publicInputs: {} } — Krishna's endpoint accepts mock in dev
-   - Show success/error status text
+   - Show success/error status text (including wrong_domain)
    - Green ✓ in top nav if useReadContract on isVerified(address) is true (if ABI empty, skip badge safely)
 
 Do NOT build /dashboard, /verifiability, /pitch, /proposals feed, category filters, deadline countdowns.
@@ -304,6 +306,7 @@ Use Planning Mode. Wait for my OK before editing files.
 
 1. Implement POST frontend/app/api/attest/route.ts per PRD §7.4.
    - Mock zk.email proof verification for now (accept any proof in dev).
+   - After extracting email: domain (after @, lowercase) MUST be in NEXT_PUBLIC_ALLOWED_DOMAINS split by comma (nitk.edu.in and gmail.com). Else return { ok: false, error: 'wrong_domain' }.
    - Real parts: nullifier = keccak256(email + DOMAIN_SALT), issuer signMessage, call SilentCouncil.verifyVoter via viem, insert verified_users, return §7.4 JSON shape.
 
 2. Implement POST frontend/app/api/vote/route.ts per PRD §7.4.
@@ -331,7 +334,7 @@ Goal: verify → vote → double-vote-rejected works in production.
 
 2. Try to replace mock attest with @zk-email/sdk + blueprint udp/gmail-domain-proof.
 
-3. If zk.email isn't working within 60 minutes: implement POST /api/verify-otp per §13.2 (email code → hash email → same nullifier + verifyVoter path). Tell Lakshay the frontend button change in one paragraph.
+3. If zk.email isn't working within 60 minutes: implement POST /api/verify-otp per §13.2 (email code → hash email → same nullifier + verifyVoter path). Same domain allow-list: nitk.edu.in and gmail.com only. Tell Lakshay the frontend button change in one paragraph.
 
 4. On already_voted / invalid_proof / not_verified, insert sybil_attempts row.
 
