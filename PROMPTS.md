@@ -162,7 +162,7 @@ Analyze the root cause. List 3 possible fixes ranked by likelihood of working. T
 
 ---
 
-## For Teammate (Antigravity + Google One)
+## For Krishna (Antigravity + Google One)
 
 ### Step 1 — Create `AGENTS.md` at the workspace root
 
@@ -263,7 +263,7 @@ DO NOT execute code yet. Wait for approval.
 
 ---
 
-### 🖱️ TEAMMATE MANUAL STEPS — click-by-click checklists
+### 🖱️ KRISHNA MANUAL STEPS — click-by-click checklists (Windows)
 
 These are the browser steps Antigravity cannot do for you. Total time: ~30 min if you don't get distracted.
 

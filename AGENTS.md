@@ -19,7 +19,7 @@ When in doubt: read PRD §2 (updated feature list) and PRD §16 (updated final r
 ## Team
 
 - **Team Lead (Lakshay)** — Frontend, design, pitch, coordination. Uses Cursor Pro. Owns per PRD §8.
-- **Teammate** — Contracts, backend, integration. Uses Antigravity + Google One. Owns per PRD §9.
+- **Krishna** — Contracts, backend, integration. Uses Antigravity + Google One. Owns per PRD §9.
 
 Both are pure vibecoders. Explain changes in plain English. Never assume prior CS knowledge.
 

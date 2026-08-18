@@ -5,7 +5,7 @@
 
 **Hackathon:** [Road to Devcon — NITK Surathkal](https://road-to-devcon-nitk-surathkal.devfolio.co/overview) (Aug 17–23, 2026)
 **Theme:** Make Private Apps using Ethereum
-**Team size:** 2 (Team Lead + Contract/Backend Engineer)
+**Team size:** 2 (Lakshay — Team Lead + Krishna — Contracts/Backend)
 **Deliverable deadline:** Saturday **Aug 22, 2026, ~5 PM IST** (submit) — Sun Aug 23 is judging only
 **Time budget (be honest):** ~4 hours/day Tue–Fri + ~10 hours Sat. Total ≈ 26h each, ≈ 52h combined. **This is a "cut everything non-essential" build.**
 
@@ -189,10 +189,10 @@ We could verify the zk.email proof *fully onchain* using zk.email's onchain veri
 ### Team Lead (Lakshay) — ~10 min
 
 - [ ] **Vercel account** (sign in with GitHub, free — Hobby plan is fine, hackathons are non-commercial)
-- [ ] **Fresh GitHub repo** `silent-council` (public, empty). Invite teammate as collaborator.
+- [ ] **Fresh GitHub repo** `silent-council` (public, empty). Invite Krishna as collaborator.
 - [ ] **Skip the custom domain.** `*.vercel.app` is fine for judges.
 
-### Teammate — ~10 min
+### Krishna — ~10 min
 
 - [ ] **Antigravity installed**, Gemini selected
 - [ ] **Supabase account** at [supabase.com](https://supabase.com) → new project `silent-council` (free tier). Copy `URL`, `anon key`, `service_role key` from Project Settings → API into the shared Notion.
@@ -611,7 +611,7 @@ Goal: **demo video + Canva deck + Devfolio draft.** No new features.
 
 ---
 
-## 9. Role B — Teammate — Contracts + Backend + Integration
+## 9. Role B — Krishna — Contracts + Backend + Integration
 
 **Copy §9 into Antigravity as your project brief (see PROMPTS.md for the exact prompt).**
 
@@ -759,8 +759,8 @@ Only two sync points per day. Text in the Notion / shared chat: **done / doing /
 
 | Day | Time | What must be true |
 |---|---|---|
-| Tue | end of day | Teammate: Supabase alive + contract deployed + EAS schema UID + Notion updated. TL: repo scaffolded + Vercel URL live. |
-| Wed | end of day | Teammate: `/api/attest` + `/api/vote` return real responses in prod. TL: `/proposals/[id]` renders real data + vote buttons wired to backend. |
+| Tue | end of day | Krishna: Supabase alive + contract deployed + EAS schema UID + Notion updated. Lakshay: repo scaffolded + Vercel URL live. |
+| Wed | end of day | Krishna: `/api/attest` + `/api/vote` return real responses in prod. Lakshay: `/proposals/[id]` renders real data + vote buttons wired to backend. |
 | Thu | end of day | **Demo loop works in prod.** Verify → open proposal → vote → try again → rejected. This is the P0 checkpoint. |
 | Fri | end of day | Demo video recorded, Canva deck done, no new code going in. |
 | Sat | 16:30 | **SUBMITTED on Devfolio.** Screenshot the confirmation. |
@@ -828,13 +828,13 @@ Only two sync points per day. Text in the Notion / shared chat: **done / doing /
 
 **Fallback:** redeploy patched version, update `NEXT_PUBLIC_SILENT_COUNCIL_ADDRESS`. Have Remix + wallet ready during demo.
 
-### 13.6 Teammate ghosts you Day 3
+### 13.6 Krishna ghosts you Day 3
 
 **Fallback:** you take over backend. Skip smart contract entirely — store votes in Supabase with server-signed nullifiers. Frontend still shows "onchain" language; add the contract post-hackathon. Lose some technical credibility, keep the product.
 
 ### 13.7 You (team lead) get sick
 
-Teammate takes over frontend polish. He has AGENTS.md, PRD, and can vibecode with Antigravity. Fallback is functional if not gorgeous.
+Krishna takes over frontend polish. He has AGENTS.md, PRD, and can vibecode with Antigravity. Fallback is functional if not gorgeous.
 
 ---
 
@@ -865,7 +865,7 @@ Teammate takes over frontend polish. He has AGENTS.md, PRD, and can vibecode wit
 3. For multi-file tasks, use **Composer** (Cmd+I).
 4. First prompt each day: paste the daily kickoff prompt from `PROMPTS.md`.
 
-### Antigravity (Teammate)
+### Antigravity (Krishna)
 
 1. Copy `AGENTS.md` into workspace root (already provided).
 2. First-message prompt: copy the "Antigravity bootstrap" section from `PROMPTS.md`.

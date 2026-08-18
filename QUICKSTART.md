@@ -29,7 +29,7 @@ That's the whole product. If it's not in that sentence, it's cut (see PRD §2 "C
 
 ---
 
-## Can my teammate pure-vibecode this? (Straight answer)
+## Can Krishna pure-vibecode this? (Straight answer)
 
 **Mostly yes**, with 9 clicks he must do himself. Antigravity will write every line of Solidity, every API route, every SQL statement, and debug pasted errors. It cannot:
 
@@ -43,9 +43,9 @@ That's the whole product. If it's not in that sentence, it's cut (see PRD §2 "C
 8. Create EAS schema at easscan.org (sign MetaMask popup)
 9. Paste env vars into Vercel Project Settings
 
-Every one of those is copy-paste with zero code understanding required. Click-by-click checklists live in `PROMPTS.md` → "Teammate manual steps." Total time for all 9: **~30 min**.
+Every one of those is copy-paste with zero code understanding required. Click-by-click checklists live in `docs/KRISHNA_SETUP.md` (Windows) and `PROMPTS.md` → "Krishna manual steps." Total time for all 9: **~30 min**.
 
-**If he freezes:** you screen-share and click through with him in 15 min. If he ghosts entirely: fallback in PRD §13.6 (you take over backend, Cursor writes the API routes, we drop the smart contract and use Supabase-only voting). We lose "onchain" credibility, we keep the demo.
+**If Krishna freezes:** you screen-share and click through with him in 15 min. If he ghosts entirely: fallback in PRD §13.6 (you take over backend, Cursor writes the API routes, we drop the smart contract and use Supabase-only voting). We lose "onchain" credibility, we keep the demo.
 
 The only real danger is wallet safety: he must use a **fresh MetaMask account** with only test ETH. Never his mainnet account, never his real seed phrase.
 
@@ -77,27 +77,29 @@ git branch -M main
 git push -u origin main
 ```
 
-Then GitHub → Settings → Collaborators → invite teammate.
+Then GitHub → Settings → Collaborators → invite Krishna.
 
-### 3. Send teammate this exact message (2 min)
+### 3. Send Krishna this exact message (2 min)
 
 ```
-Bro, sending you the `silent-council` repo invite.
+Krishna, sending you the `silent-council` repo invite.
 
-Read this in order, takes ~30 min:
-1. Accept the GitHub invite, clone the repo
-2. Read PRD.md sections 0, 2, 5, 7, 9, 13 (skip the rest for now)
-3. Read the "Teammate manual steps" section in PROMPTS.md
-4. Open Antigravity in the silent-council folder
-5. Copy the "For Teammate (Antigravity)" section from PROMPTS.md and paste as your first message
+Your full Windows setup guide is in the repo: docs/KRISHNA_SETUP.md
+Read that first — it has every click spelled out.
 
-Your job today (~4h): Supabase alive + a Solidity contract deployed to Base Sepolia + the address in the repo. Full checklist in PRD §9.3 Day 0.
+Quick version:
+1. Accept the GitHub invite
+2. Clone: git clone https://github.com/lakshay196/silent-council.git
+3. Open the silent-council folder in Antigravity
+4. Open PROMPTS.md → "For Krishna (Antigravity)" → paste Step 3 as your first message to Antigravity
 
-Time budget for the week: 4h/day Tue-Fri, 10h Saturday. Submit deadline: Sat Aug 22 5 PM.
+Your job today (~4h): Supabase alive + contract deployed to Base Sepolia + address in the repo.
 
-Ping me when you need a wallet setup screen-share. Otherwise, one message end-of-day: done / doing / blocked.
+Time budget: 4h/day Tue-Fri, 10h Saturday. Submit: Sat Aug 22 5 PM.
 
-Notion for keys/URLs (never paste in WhatsApp): <you create + share>
+End-of-day message: done / doing / blocked.
+
+Notion for keys (never WhatsApp): <paste your Notion link>
 ```
 
 ### 4. §5 setup (15 min)
@@ -110,17 +112,17 @@ From `PROMPTS.md` → "For Team Lead (Cursor Pro)" → Step 2. Paste into Cursor
 
 ---
 
-## What your teammate does RIGHT NOW (next 60 min)
+## What Krishna does RIGHT NOW (next 60 min)
 
-Full plan in PRD §9.3 Day 0. In short:
+Full plan: **`docs/KRISHNA_SETUP.md`** (Windows, step-by-step). Short version:
 
-1. Accept GitHub invite, clone
-2. Read PRD §7, §9, §13
-3. Copy the "For Teammate" bootstrap prompt from PROMPTS.md into Antigravity
+1. Accept GitHub invite, clone repo
+2. Read `docs/KRISHNA_SETUP.md` end to end
+3. Copy the Krishna bootstrap prompt from PROMPTS.md into Antigravity
 4. Do §5 setup (~15 min)
-5. Follow the click-by-click **"Teammate manual steps"** in PROMPTS.md — Supabase project + schema, contract deploy via Remix, EAS schema creation
+5. Supabase + Remix deploy + EAS schema (checklists in KRISHNA_SETUP.md)
 6. Push contract address + ABI to `frontend/lib/contracts.ts`
-7. Ping you with a "done" message + everything in the shared Notion
+7. Ping Lakshay: "done" + everything in shared Notion
 
 ---
 
@@ -135,7 +137,7 @@ DAY 4 (Sat Aug 22, ~10h)  — SUBMIT by 5 PM
 Sun Aug 23                — Judging day
 ```
 
-Full daily schedules: PRD §8.3 (you) and §9.3 (teammate).
+Full daily schedules: PRD §8.3 (Lakshay) and §9.3 (Krishna).
 
 ---
 
@@ -154,9 +156,9 @@ Full sync schedule: PRD §10.
 
 ## Emergency contacts
 
-- **Teammate silent for >12h** → phone call
-- **Teammate falls sick** → PRD §13.6 fallback: you take over backend, drop smart contract, Supabase-only voting
-- **You fall sick** → teammate handles frontend polish with Antigravity + AGENTS.md + PRD
+- **Krishna silent for >12h** → phone call
+- **Krishna falls sick** → PRD §13.6 fallback: Lakshay takes over backend, drop smart contract, Supabase-only voting
+- **Lakshay falls sick** → Krishna handles frontend polish with Antigravity + AGENTS.md + PRD
 - **zk.email breaks** → PRD §13.2 OTP fallback (ship it Thursday if ZK is still fighting you)
 - **Vercel breaks last minute** → PRD §13.4 (local + ngrok tunnel)
 
