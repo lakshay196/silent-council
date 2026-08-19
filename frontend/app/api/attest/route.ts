@@ -80,11 +80,33 @@ export async function POST(req: NextRequest) {
     }
 
     const isMock = zkEmailProof === "mock";
-    const email = extractEmail(publicInputs, isMock);
+    let email: string | null = null;
+
+    if (!isMock) {
+      const { verifyZkEmailProof } = await import("@/lib/zk-email");
+      const verification = await verifyZkEmailProof(zkEmailProof, publicInputs);
+
+      if (!verification.isValid) {
+        await logSybilAttempt(wallet, "invalid_proof");
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "invalid_proof",
+            message: verification.error || "ZK email proof verification failed",
+          },
+          { status: 400 }
+        );
+      }
+
+      email = verification.email || extractEmail(publicInputs, false);
+    } else {
+      email = extractEmail(publicInputs, true);
+    }
+
     if (!email) {
       await logSybilAttempt(wallet, "invalid_proof");
       return NextResponse.json(
-        { ok: false, error: "invalid_proof", message: "Unable to extract email from public inputs" },
+        { ok: false, error: "invalid_proof", message: "Unable to extract email from proof outputs" },
         { status: 400 }
       );
     }
