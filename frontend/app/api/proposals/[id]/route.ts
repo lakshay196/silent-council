@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { DEMO_PROPOSALS } from "@/lib/demo-proposals";
 import {
   getSupabaseAdmin,
   mapDbProposalToProposal,
+  supabaseAdminConfigured,
   type DbProposal,
   type DbVote,
 } from "@/lib/server/supabase-admin";
@@ -20,6 +22,17 @@ export async function GET(
       );
     }
 
+    if (!supabaseAdminConfigured) {
+      const demo = DEMO_PROPOSALS.find((p) => p.id === id || p.onchainId === id);
+      if (demo) {
+        return NextResponse.json({ proposal: demo, recentVotes: [] }, { status: 200 });
+      }
+      return NextResponse.json(
+        { ok: false, error: "proposal_closed", message: "Proposal not found" },
+        { status: 404 }
+      );
+    }
+
     const admin = getSupabaseAdmin();
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
@@ -33,6 +46,10 @@ export async function GET(
     const { data: proposalData, error: proposalError } = await proposalQuery.maybeSingle();
 
     if (proposalError || !proposalData) {
+      const demo = DEMO_PROPOSALS.find((p) => p.id === id || p.onchainId === id);
+      if (demo) {
+        return NextResponse.json({ proposal: demo, recentVotes: [] }, { status: 200 });
+      }
       return NextResponse.json(
         { ok: false, error: "proposal_closed", message: "Proposal not found" },
         { status: 404 }

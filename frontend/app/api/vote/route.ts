@@ -7,6 +7,7 @@ import {
 import {
   getSupabaseAdmin,
   logSybilAttempt,
+  supabaseAdminConfigured,
   type DbProposal,
 } from "@/lib/server/supabase-admin";
 import type { Hex } from "viem";
@@ -50,6 +51,14 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedWallet = wallet.toLowerCase();
+
+    if (!supabaseAdminConfigured) {
+      return NextResponse.json(
+        { ok: false, error: "server_error", message: "Database is not configured with valid credentials." },
+        { status: 500 }
+      );
+    }
+
     const admin = getSupabaseAdmin();
 
     // 1. Look up verified user by wallet

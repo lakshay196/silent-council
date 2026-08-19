@@ -9,11 +9,17 @@ import {
 import {
   getSupabaseAdmin,
   logSybilAttempt,
+  supabaseAdminConfigured,
 } from "@/lib/server/supabase-admin";
 import type { Address } from "viem";
 
-function extractEmail(publicInputs: unknown): string | null {
-  if (!publicInputs) return null;
+function extractEmail(publicInputs: unknown, isMock = false): string | null {
+  if (!publicInputs || (typeof publicInputs === "object" && Object.keys(publicInputs as object).length === 0)) {
+    if (isMock) {
+      return "demo@nitk.edu.in";
+    }
+    return null;
+  }
 
   if (typeof publicInputs === "object") {
     const obj = publicInputs as Record<string, unknown>;
@@ -33,6 +39,10 @@ function extractEmail(publicInputs: unknown): string | null {
 
   if (typeof publicInputs === "string" && publicInputs.includes("@")) {
     return publicInputs.trim();
+  }
+
+  if (isMock) {
+    return "demo@nitk.edu.in";
   }
 
   return null;
@@ -70,11 +80,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const email = extractEmail(publicInputs);
+    const isMock = zkEmailProof === "mock";
+    let email: string | null = null;
+
+    if (!isMock) {
+      const { verifyZkEmailProof } = await import("@/lib/zk-email");
+      const verification = await verifyZkEmailProof(zkEmailProof, publicInputs);
+
+      if (!verification.isValid) {
+        await logSybilAttempt(wallet, "invalid_proof");
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "invalid_proof",
+            message: verification.error || "ZK email proof verification failed",
+          },
+          { status: 400 }
+        );
+      }
+
+      email = verification.email || extractEmail(publicInputs, false);
+    } else {
+      email = extractEmail(publicInputs, true);
+    }
+
     if (!email) {
       await logSybilAttempt(wallet, "invalid_proof");
       return NextResponse.json(
-        { ok: false, error: "invalid_proof", message: "Unable to extract email from public inputs" },
+        { ok: false, error: "invalid_proof", message: "Unable to extract email from proof outputs" },
         { status: 400 }
       );
     }
@@ -96,6 +129,13 @@ export async function POST(req: NextRequest) {
 
     const normalizedWallet = wallet.toLowerCase() as Address;
     const nullifier = computeEmailNullifier(email);
+
+    if (!supabaseAdminConfigured) {
+      return NextResponse.json(
+        { ok: false, error: "server_error", message: "Database is not configured with valid credentials." },
+        { status: 500 }
+      );
+    }
 
     const admin = getSupabaseAdmin();
 
