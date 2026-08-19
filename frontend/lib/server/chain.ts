@@ -24,9 +24,13 @@ export function getPublicClient() {
 }
 
 export function getIssuerAccount() {
-  const privateKey = process.env.ISSUER_PRIVATE_KEY;
-  if (!privateKey || !privateKey.startsWith("0x")) {
+  let privateKey = process.env.ISSUER_PRIVATE_KEY;
+  if (!privateKey || privateKey.trim().length === 0) {
     throw new Error("ISSUER_PRIVATE_KEY is missing or invalid");
+  }
+  privateKey = privateKey.trim();
+  if (!privateKey.startsWith("0x")) {
+    privateKey = `0x${privateKey}`;
   }
   return privateKeyToAccount(privateKey as Hex);
 }
