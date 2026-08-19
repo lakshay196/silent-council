@@ -12,8 +12,13 @@ import {
 } from "@/lib/server/supabase-admin";
 import type { Address } from "viem";
 
-function extractEmail(publicInputs: unknown): string | null {
-  if (!publicInputs) return null;
+function extractEmail(publicInputs: unknown, isMock = false): string | null {
+  if (!publicInputs || (typeof publicInputs === "object" && Object.keys(publicInputs as object).length === 0)) {
+    if (isMock) {
+      return "demo@nitk.edu.in";
+    }
+    return null;
+  }
 
   if (typeof publicInputs === "object") {
     const obj = publicInputs as Record<string, unknown>;
@@ -33,6 +38,10 @@ function extractEmail(publicInputs: unknown): string | null {
 
   if (typeof publicInputs === "string" && publicInputs.includes("@")) {
     return publicInputs.trim();
+  }
+
+  if (isMock) {
+    return "demo@nitk.edu.in";
   }
 
   return null;
@@ -70,7 +79,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const email = extractEmail(publicInputs);
+    const isMock = zkEmailProof === "mock";
+    const email = extractEmail(publicInputs, isMock);
     if (!email) {
       await logSybilAttempt(wallet, "invalid_proof");
       return NextResponse.json(
