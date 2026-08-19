@@ -56,6 +56,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (action !== "send" && action !== "verify") {
+      return NextResponse.json(
+        { ok: false, error: "server_error", message: "Unrecognized action. Use 'send' or 'verify'." },
+        { status: 400 }
+      );
+    }
+
     if (!supabaseAdminConfigured) {
       return NextResponse.json(
         { ok: false, error: "server_error", message: "Database is not configured with valid credentials." },
