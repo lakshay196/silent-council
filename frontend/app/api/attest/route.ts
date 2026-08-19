@@ -9,6 +9,7 @@ import {
 import {
   getSupabaseAdmin,
   logSybilAttempt,
+  supabaseAdminConfigured,
 } from "@/lib/server/supabase-admin";
 import type { Address } from "viem";
 
@@ -128,6 +129,13 @@ export async function POST(req: NextRequest) {
 
     const normalizedWallet = wallet.toLowerCase() as Address;
     const nullifier = computeEmailNullifier(email);
+
+    if (!supabaseAdminConfigured) {
+      return NextResponse.json(
+        { ok: false, error: "server_error", message: "Database is not configured with valid credentials." },
+        { status: 500 }
+      );
+    }
 
     const admin = getSupabaseAdmin();
 

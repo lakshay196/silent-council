@@ -4,10 +4,18 @@ import type { Proposal, ProposalCategory } from "@/lib/types";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
+export const supabaseAdminConfigured =
+  Boolean(supabaseUrl) &&
+  !supabaseUrl.includes("xxxxx") &&
+  !supabaseUrl.includes("placeholder") &&
+  Boolean(serviceRoleKey) &&
+  serviceRoleKey.length > 20 &&
+  !serviceRoleKey.includes("...");
+
 export function getSupabaseAdmin() {
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseAdminConfigured) {
     throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured"
+      "NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured with valid credentials"
     );
   }
   return createClient(supabaseUrl, serviceRoleKey, {
