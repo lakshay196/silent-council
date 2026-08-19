@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAccount, useReadContract } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,12 @@ export default function VerifyPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-16 sm:py-24">
+      <Link
+        href="/"
+        className="mb-10 inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors hover:border-white/30 hover:bg-white/[0.1]"
+      >
+        ← Back to proposals
+      </Link>
       <div className="text-center">
         <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
           Verification

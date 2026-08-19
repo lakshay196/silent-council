@@ -72,6 +72,29 @@ export function mapDbProposalToProposal(row: DbProposal): Proposal {
   };
 }
 
+export async function upsertVerifiedUser(
+  wallet: string,
+  nullifier: string,
+  attestationUid?: string
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+  const uid =
+    attestationUid ||
+    process.env.NEXT_PUBLIC_EAS_SCHEMA_UID ||
+    "0xfd197179776b67f049a8ecea69a6054e6f047500dd0098e669bbba470e77518";
+  const { error } = await admin.from("verified_users").upsert(
+    {
+      wallet: wallet.toLowerCase(),
+      nullifier,
+      attestation_uid: uid,
+    },
+    { onConflict: "wallet" }
+  );
+  if (error) {
+    console.error("Failed to upsert verified_users:", error.message);
+  }
+}
+
 export async function logSybilAttempt(
   wallet: string | null,
   reason: "duplicate_nullifier" | "already_voted" | "invalid_proof" | "not_verified" | "wrong_domain"

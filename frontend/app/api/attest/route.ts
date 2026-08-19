@@ -3,6 +3,7 @@ import { parseAllowedDomains } from "@/lib/types";
 import {
   computeEmailNullifier,
   isAddress,
+  readWalletNullifier,
   relayVerifyVoter,
   signVoterHash,
 } from "@/lib/server/chain";
@@ -10,8 +11,16 @@ import {
   getSupabaseAdmin,
   logSybilAttempt,
   supabaseAdminConfigured,
+  upsertVerifiedUser,
 } from "@/lib/server/supabase-admin";
 import type { Address } from "viem";
+
+function attestationUidFallback(): string {
+  return (
+    process.env.NEXT_PUBLIC_EAS_SCHEMA_UID ||
+    "0xfd197179776b67f049a8ecea69a6054e6f047500dd0098e669bbba470e77518"
+  );
+}
 
 function extractEmail(publicInputs: unknown, isMock = false): string | null {
   if (!publicInputs || (typeof publicInputs === "object" && Object.keys(publicInputs as object).length === 0)) {
@@ -157,6 +166,12 @@ export async function POST(req: NextRequest) {
 
     if (existingUser) {
       await logSybilAttempt(normalizedWallet, "duplicate_nullifier");
+      if (existingUser.wallet?.toLowerCase() !== normalizedWallet) {
+        const onchainNullifier = await readWalletNullifier(normalizedWallet).catch(() => null);
+        if (onchainNullifier) {
+          await upsertVerifiedUser(normalizedWallet, onchainNullifier, attestationUidFallback());
+        }
+      }
       return NextResponse.json(
         {
           ok: false,
@@ -179,6 +194,10 @@ export async function POST(req: NextRequest) {
 
       if (errStr.includes("already verified") || errStr.includes("already registered")) {
         await logSybilAttempt(normalizedWallet, "duplicate_nullifier");
+        const onchainNullifier = await readWalletNullifier(normalizedWallet).catch(() => null);
+        if (onchainNullifier) {
+          await upsertVerifiedUser(normalizedWallet, onchainNullifier, attestationUidFallback());
+        }
         return NextResponse.json(
           {
             ok: false,
@@ -195,16 +214,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const attestationUid =
-      process.env.NEXT_PUBLIC_EAS_SCHEMA_UID ||
-      "0xfd197179776b67f049a8ecea69a6054e6f047500dd0098e669bbba470e77518";
+    const attestationUid = attestationUidFallback();
 
     // Insert into verified_users only after onchain verification succeeds
-    const { error: insertError } = await admin.from("verified_users").insert({
-      wallet: normalizedWallet,
-      nullifier,
-      attestation_uid: attestationUid,
-    });
+    const { error: insertError } = await admin.from("verified_users").upsert(
+      {
+        wallet: normalizedWallet,
+        nullifier,
+        attestation_uid: attestationUid,
+      },
+      { onConflict: "wallet" }
+    );
 
     if (insertError) {
       console.error("Failed to insert verified_users record:", insertError.message);

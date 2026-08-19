@@ -97,6 +97,27 @@ export async function relayVerifyVoter(
   return txHash;
 }
 
+const ZERO_BYTES32 =
+  "0x0000000000000000000000000000000000000000000000000000000000000000" as Hex;
+
+/**
+ * Read the onchain nullifier for a wallet. Used when Supabase is missing the
+ * verified_users row (attest succeeded onchain, insert failed, or already_verified).
+ */
+export async function readWalletNullifier(
+  wallet: Address
+): Promise<Hex | null> {
+  const publicClient = getPublicClient();
+  const nullifier = await publicClient.readContract({
+    address: SILENT_COUNCIL_ADDRESS,
+    abi: SILENT_COUNCIL_ABI,
+    functionName: "walletToNullifier",
+    args: [wallet],
+  });
+  if (!nullifier || nullifier === ZERO_BYTES32) return null;
+  return nullifier;
+}
+
 export async function relayVote(
   proposalId: Hex,
   choice: 0 | 1 | 2,

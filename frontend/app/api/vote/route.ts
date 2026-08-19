@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isAddress,
+  readWalletNullifier,
   relayVote,
   signVoteHash,
 } from "@/lib/server/chain";
@@ -8,9 +9,10 @@ import {
   getSupabaseAdmin,
   logSybilAttempt,
   supabaseAdminConfigured,
+  upsertVerifiedUser,
   type DbProposal,
 } from "@/lib/server/supabase-admin";
-import type { Hex } from "viem";
+import type { Address, Hex } from "viem";
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,11 +63,11 @@ export async function POST(req: NextRequest) {
 
     const admin = getSupabaseAdmin();
 
-    // 1. Look up verified user by wallet
+    // 1. Look up verified user by wallet (DB cache). If missing, recover from chain.
     const { data: verifiedUser, error: userError } = await admin
       .from("verified_users")
       .select("wallet, nullifier")
-      .eq("wallet", normalizedWallet)
+      .ilike("wallet", normalizedWallet)
       .maybeSingle();
 
     if (userError) {
@@ -76,7 +78,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!verifiedUser || !verifiedUser.nullifier) {
+    let nullifier = (verifiedUser?.nullifier as Hex | undefined) ?? null;
+
+    if (!nullifier) {
+      try {
+        nullifier = await readWalletNullifier(normalizedWallet as Address);
+        if (nullifier) {
+          await upsertVerifiedUser(normalizedWallet, nullifier);
+        }
+      } catch (onchainErr: unknown) {
+        console.error(
+          "Onchain nullifier lookup failed in /api/vote:",
+          onchainErr instanceof Error ? onchainErr.message : "unknown"
+        );
+      }
+    }
+
+    if (!nullifier) {
       await logSybilAttempt(normalizedWallet, "not_verified");
       return NextResponse.json(
         {
@@ -87,8 +105,6 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       );
     }
-
-    const nullifier = verifiedUser.nullifier as Hex;
 
     // 2. Look up proposal by ID (UUID or onchain_id)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(proposalId);
