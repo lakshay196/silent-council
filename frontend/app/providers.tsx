@@ -9,10 +9,15 @@ import { Toaster } from "sonner";
 import "@rainbow-me/rainbowkit/styles.css";
 
 const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL ?? "https://sepolia.base.org";
+const walletConnectProjectId =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "";
 
 const config = getDefaultConfig({
   appName: "Silent Council",
-  projectId: "00000000000000000000000000000000",
+  projectId:
+    walletConnectProjectId.length > 0
+      ? walletConnectProjectId
+      : "00000000000000000000000000000000",
   chains: [baseSepolia],
   transports: {
     [baseSepolia.id]: http(rpcUrl),

@@ -26,4 +26,13 @@ const supabaseAnonKey =
 export const supabaseConfigured =
   supabaseUrl !== PLACEHOLDER_URL && supabaseAnonKey !== PLACEHOLDER_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: (url, options) =>
+      fetch(url, {
+        ...options,
+        // Fail fast so the UI falls back to demo data instead of hanging 10–15s.
+        signal: AbortSignal.timeout(4000),
+      }),
+  },
+});

@@ -90,6 +90,7 @@ export default async function Home() {
                   <li key={proposal.id}>
                     <Link
                       href={`/proposals/${proposal.id}`}
+                      prefetch={false}
                       className="group grid min-h-11 grid-cols-[1.75rem_minmax(0,1fr)_3.5rem_0.75rem] items-center gap-3 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_6rem_1rem] sm:gap-5 sm:py-6"
                     >
                       <span className="font-mono text-xs text-zinc-600">
