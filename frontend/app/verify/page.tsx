@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { WalletButton } from "@/components/wallet-button";
 import {
@@ -11,55 +12,34 @@ import {
   SILENT_COUNCIL_ADDRESS,
 } from "@/lib/contracts";
 
-type AttestError =
-  | "invalid_proof"
-  | "wrong_domain"
-  | "already_verified"
-  | "server_error"
-  | "not_implemented"
-  | string;
-
-type AttestResponse =
-  | {
-      ok: true;
-      nullifier: string;
-      issuerSignature: string;
-      attestationUid: string;
-    }
-  | {
-      ok: false;
-      error: AttestError;
-      message: string;
-    };
-
-const ATTEST_ERROR_MESSAGES: Record<string, string> = {
-  invalid_proof: "We could not verify this email proof. Please try again.",
-  wrong_domain:
-    "Use an @nitk.edu.in email. Gmail is also allowed for this judging demo.",
-  already_verified: "This wallet or email is already verified.",
-  server_error: "Something went wrong. Please retry in a moment.",
-  not_implemented: "Verification API not deployed yet. Ping Krishna.",
-};
-
-type Status = {
-  kind: "idle" | "busy" | "success" | "error";
-  text: string;
-};
-
 const ZERO = "0x0000000000000000000000000000000000000000";
+
+type OtpPhase = "idle" | "entering_email" | "sending" | "entering_code" | "verifying" | "done";
+
+type StatusKind = "idle" | "busy" | "success" | "error";
+
+const OTP_ERROR_MESSAGES: Record<string, string> = {
+  wrong_domain: "Use an @nitk.edu.in or @gmail.com address.",
+  already_verified: "This wallet or email is already verified.",
+  invalid_code: "Invalid or expired code. Please try again.",
+  server_error: "Something went wrong. Please retry in a moment.",
+};
 
 export default function VerifyPage() {
   const { address, isConnected } = useAccount();
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<Status>({
-    kind: "idle",
-    text: "Ready when you are.",
-  });
+
+  // OTP flow state
+  const [phase, setPhase] = useState<OtpPhase>("idle");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [statusKind, setStatusKind] = useState<StatusKind>("idle");
 
   const contractReady =
     SILENT_COUNCIL_ABI.length > 0 && SILENT_COUNCIL_ADDRESS !== ZERO;
 
-  const { data: isVerified, refetch: refetchVerified } = useReadContract({
+  const { data: isVerifiedOnChain, refetch: refetchVerified } = useReadContract({
     address: SILENT_COUNCIL_ADDRESS,
     abi: SILENT_COUNCIL_ABI,
     functionName: "isVerified",
@@ -69,56 +49,76 @@ export default function VerifyPage() {
     },
   });
 
-  const busy = status.kind === "busy";
-  const verified = isVerified === true || status.kind === "success";
+  const verified = isVerifiedOnChain === true || phase === "done";
+  const busy = phase === "sending" || phase === "verifying";
 
-  async function onVerify() {
-    if (!isConnected || !address) {
-      setStatus({ kind: "error", text: "Connect your wallet first." });
-      return;
-    }
+  // Step 1: user clicks "Verify with Email" → show email input
+  function startOtpFlow() {
+    setPhase("entering_email");
+    setErrorMsg("");
+    setCode("");
+  }
 
-    setStatus({ kind: "busy", text: "Generating proof…" });
+  // Step 2: send OTP to email
+  async function sendCode() {
+    if (!email.trim()) return;
+    setPhase("sending");
+    setErrorMsg("");
     try {
-      const res = await fetch("/api/attest", {
+      const res = await fetch("/api/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          wallet: address,
-          // Wednesday integration: Krishna's /api/attest accepts a labelled mock
-          // request for testing. Thursday must switch to a real @zk-email/sdk
-          // proof or the coordinated OTP fallback (PRD §13.2).
-          zkEmailProof: "mock",
-          publicInputs: {},
-        }),
+        body: JSON.stringify({ action: "send", email: email.trim().toLowerCase() }),
       });
-      const data: unknown = await res.json();
-      const body = data as AttestResponse;
-
-      if (body.ok) {
-        setStatus({ kind: "success", text: "Verified. You can vote now." });
-        await refetchVerified();
-        await queryClient.invalidateQueries({ queryKey: ["readContract"] });
-        return;
+      const data = (await res.json()) as { ok: boolean; error?: string; message?: string };
+      if (data.ok) {
+        setPhase("entering_code");
+      } else {
+        setErrorMsg(OTP_ERROR_MESSAGES[data.error ?? ""] ?? data.message ?? "Failed to send code.");
+        setPhase("entering_email");
       }
-
-      const friendly =
-        ATTEST_ERROR_MESSAGES[body.error] ??
-        body.message ??
-        "Verification failed.";
-      setStatus({ kind: "error", text: friendly });
     } catch {
-      setStatus({
-        kind: "error",
-        text: "Could not reach the server. Check your connection and retry.",
-      });
+      setErrorMsg("Could not reach the server. Check your connection.");
+      setPhase("entering_email");
     }
   }
 
-  const statusColor =
-    status.kind === "success"
+  // Step 3: verify OTP code
+  async function verifyCode() {
+    if (!code.trim() || !address) return;
+    setPhase("verifying");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify",
+          email: email.trim().toLowerCase(),
+          token: code.trim(),
+          wallet: address,
+        }),
+      });
+      const data = (await res.json()) as { ok: boolean; error?: string; message?: string };
+      if (data.ok) {
+        setPhase("done");
+        setStatusKind("success");
+        await refetchVerified();
+        await queryClient.invalidateQueries({ queryKey: ["readContract"] });
+      } else {
+        setErrorMsg(OTP_ERROR_MESSAGES[data.error ?? ""] ?? data.message ?? "Verification failed.");
+        setPhase("entering_code");
+      }
+    } catch {
+      setErrorMsg("Could not reach the server. Check your connection.");
+      setPhase("entering_code");
+    }
+  }
+
+  const step2Color =
+    statusKind === "success"
       ? "text-emerald-300"
-      : status.kind === "error"
+      : errorMsg
         ? "text-rose-300"
         : "text-zinc-400";
 
@@ -144,6 +144,7 @@ export default function VerifyPage() {
       </div>
 
       <div className="mt-12 rounded-2xl border border-white/[0.08] bg-zinc-900/40 p-6 sm:p-8">
+        {/* Step 1: Connect wallet */}
         <div className="flex items-center gap-3">
           <span
             className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
@@ -152,7 +153,7 @@ export default function VerifyPage() {
                 : "bg-white/[0.06] text-zinc-400"
             }`}
           >
-            {isConnected ? "\u2713" : "1"}
+            {isConnected ? "✓" : "1"}
           </span>
           <span className="text-sm text-zinc-300">Connect your wallet</span>
         </div>
@@ -162,34 +163,107 @@ export default function VerifyPage() {
 
         <Separator className="my-6 bg-white/[0.06]" />
 
+        {/* Step 2: Verify email via OTP */}
         <div className="flex items-center gap-3">
           <span
             className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${step2CheckClass}`}
           >
-            {verified ? "\u2713" : "2"}
+            {verified ? "✓" : "2"}
           </span>
           <span className="text-sm text-zinc-300">Verify your email</span>
         </div>
-        <div className="mt-4 pl-9">
-          <Button
-            size="lg"
-            className="h-11 w-full bg-indigo-500 text-sm font-medium text-white transition-colors hover:bg-indigo-400 disabled:opacity-40"
-            disabled={busy || !isConnected || verified}
-            onClick={() => void onVerify()}
-          >
-            {verified
-              ? "Already verified"
-              : busy
-                ? "Verifying…"
-                : "Verify NITK email"}
-          </Button>
-          <p className={`mt-3 text-sm ${statusColor}`} role="status">
-            {isConnected
-              ? verified
-                ? "You can vote now."
-                : status.text
-              : "Connect a wallet above to continue."}
-          </p>
+
+        <div className="mt-4 pl-9 space-y-3">
+          {/* Already verified */}
+          {verified && (
+            <p className="text-sm text-emerald-300">
+              You&apos;re verified. You can now vote on proposals.
+            </p>
+          )}
+
+          {/* Idle: show start button */}
+          {!verified && phase === "idle" && (
+            <Button
+              size="lg"
+              className="h-11 w-full bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-400 disabled:opacity-40"
+              disabled={!isConnected}
+              onClick={startOtpFlow}
+            >
+              Verify with Email OTP
+            </Button>
+          )}
+
+          {/* Entering email */}
+          {!verified && (phase === "entering_email" || phase === "sending") && (
+            <div className="space-y-2">
+              <Input
+                type="email"
+                placeholder="you@gmail.com or you@nitk.edu.in"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") void sendCode(); }}
+                className="h-11 border-white/10 bg-white/[0.04] text-white placeholder:text-zinc-500 focus-visible:ring-indigo-500"
+                disabled={phase === "sending"}
+              />
+              <Button
+                size="lg"
+                className="h-11 w-full bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-400 disabled:opacity-40"
+                disabled={!email.trim() || phase === "sending"}
+                onClick={() => void sendCode()}
+              >
+                {phase === "sending" ? "Sending code…" : "Send verification code"}
+              </Button>
+            </div>
+          )}
+
+          {/* Entering OTP code */}
+          {!verified && (phase === "entering_code" || phase === "verifying") && (
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-400">
+                Code sent to <span className="text-zinc-200">{email}</span>.
+                Check your inbox (and spam folder).
+              </p>
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="6-digit code"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                onKeyDown={(e) => { if (e.key === "Enter") void verifyCode(); }}
+                className="h-11 border-white/10 bg-white/[0.04] text-center text-lg tracking-[0.5em] text-white placeholder:text-zinc-500 focus-visible:ring-indigo-500"
+                disabled={phase === "verifying"}
+              />
+              <Button
+                size="lg"
+                className="h-11 w-full bg-indigo-500 text-sm font-medium text-white hover:bg-indigo-400 disabled:opacity-40"
+                disabled={code.length < 6 || phase === "verifying"}
+                onClick={() => void verifyCode()}
+              >
+                {phase === "verifying" ? "Verifying…" : "Confirm code"}
+              </Button>
+              <button
+                className="w-full text-center text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                onClick={() => { setPhase("entering_email"); setCode(""); setErrorMsg(""); }}
+              >
+                Wrong email? Go back
+              </button>
+            </div>
+          )}
+
+          {/* Error message */}
+          {errorMsg && !verified && (
+            <p className={`text-sm ${step2Color}`} role="alert">
+              {errorMsg}
+            </p>
+          )}
+
+          {/* Not connected hint */}
+          {!isConnected && phase === "idle" && (
+            <p className="text-sm text-zinc-500">
+              Connect a wallet above to continue.
+            </p>
+          )}
         </div>
       </div>
 
