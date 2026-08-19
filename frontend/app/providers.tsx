@@ -26,7 +26,15 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={darkTheme()} modalSize="compact">
+        <RainbowKitProvider
+          theme={darkTheme({
+            accentColor: "#6366f1",
+            accentColorForeground: "#ffffff",
+            borderRadius: "large",
+            overlayBlur: "small",
+          })}
+          modalSize="compact"
+        >
           {children}
           <Toaster theme="dark" position="top-center" />
         </RainbowKitProvider>

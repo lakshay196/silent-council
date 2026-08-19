@@ -1,141 +1,143 @@
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DEMO_PROPOSALS } from "@/lib/demo-proposals";
 import type { Proposal } from "@/lib/types";
 
-const DEMO_PROPOSALS: Proposal[] = [
-  {
-    id: "demo-mess",
-    onchainId: "0x01",
-    title: "Extend mess hours to 11pm?",
-    description: "Keep dinner service open later on weeknights.",
-    category: "mess",
-    deadline: "2026-08-22T17:00:00.000Z",
-    creatorWallet: "0x0000000000000000000000000000000000000000",
-    tallyYes: 42,
-    tallyNo: 11,
-    tallyAbstain: 3,
-    createdAt: "2026-08-18T00:00:00.000Z",
-  },
-  {
-    id: "demo-plastic",
-    onchainId: "0x02",
-    title: "Ban plastic bottles in hostels?",
-    description: "Switch hostel stores to refill stations only.",
-    category: "hostel",
-    deadline: "2026-08-22T17:00:00.000Z",
-    creatorWallet: "0x0000000000000000000000000000000000000000",
-    tallyYes: 28,
-    tallyNo: 19,
-    tallyAbstain: 7,
-    createdAt: "2026-08-18T00:00:00.000Z",
-  },
-  {
-    id: "demo-library",
-    onchainId: "0x03",
-    title: "Longer library hours during exams?",
-    description: "Keep the library open until 2am in exam weeks.",
-    category: "academic",
-    deadline: "2026-08-22T17:00:00.000Z",
-    creatorWallet: "0x0000000000000000000000000000000000000000",
-    tallyYes: 61,
-    tallyNo: 4,
-    tallyAbstain: 2,
-    createdAt: "2026-08-18T00:00:00.000Z",
-  },
-];
+function MiniTally({ proposal }: { proposal: Proposal }) {
+  const total =
+    proposal.tallyYes + proposal.tallyNo + proposal.tallyAbstain || 1;
+  const w = (n: number) => `${(n / total) * 100}%`;
+  return (
+    <div className="flex h-1 w-full max-w-24 overflow-hidden rounded-full bg-white/[0.06]">
+      <div
+        className="bg-emerald-400/80"
+        style={{ width: w(proposal.tallyYes) }}
+      />
+      <div
+        className="bg-rose-400/70"
+        style={{ width: w(proposal.tallyNo) }}
+      />
+      <div
+        className="bg-zinc-500/70"
+        style={{ width: w(proposal.tallyAbstain) }}
+      />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
     <div className="relative overflow-x-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[28rem] bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.28),_transparent_60%)]" />
-      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(55rem_28rem_at_50%_-6rem,rgba(99,102,241,0.14),transparent_70%)]" />
 
-      <main className="relative mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-5xl flex-col px-4 py-16 sm:py-24">
-        <section className="mx-auto max-w-3xl text-center">
-          <p className="mb-4 text-xs font-medium tracking-[0.2em] text-indigo-300 uppercase">
-            NITK · Base Sepolia
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-6xl">
+      <main className="relative">
+        <section className="mx-auto max-w-3xl px-4 pb-16 pt-20 text-center sm:pb-20 sm:pt-28">
+          <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
             Silent Council
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base text-zinc-300 sm:text-lg">
-            Onchain voting for NITK. Verified voters, secret ballots, public
-            tallies.
           </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <h1 className="mt-7 text-4xl font-semibold leading-[1.06] tracking-tight text-white sm:text-6xl">
+            Every vote counted.
+            <br />
+            <span className="text-indigo-300">No voter exposed.</span>
+          </h1>
+          <p className="mx-auto mt-6 text-base text-zinc-400">
+            Private voting for NITK students.
+          </p>
+
+          <div className="mt-9 flex justify-center">
             <Link
               href="/verify"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "h-11 w-full bg-indigo-500 px-6 text-base text-white hover:bg-indigo-400 sm:w-auto"
+                "h-11 w-full bg-indigo-500 px-7 text-sm font-medium text-white transition-colors hover:bg-indigo-400 sm:w-auto"
               )}
             >
               Verify with NITK email
             </Link>
-            <Link
-              href="/proposals"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "h-11 w-full px-6 text-base sm:w-auto"
-              )}
-            >
-              See live proposals
-            </Link>
           </div>
-          <p className="mt-3 text-sm text-zinc-400">
+          <p className="mt-4 text-xs text-zinc-600">
             Demo also accepts Gmail
           </p>
         </section>
 
-        <section className="mt-20">
-          <h2 className="mb-6 text-lg font-medium text-white">Open proposals</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {DEMO_PROPOSALS.map((proposal) => (
-              <Link key={proposal.id} href={`/proposals/${proposal.id}`}>
-                <Card className="h-full bg-zinc-900/70 transition-colors hover:bg-zinc-900">
-                  <CardHeader>
-                    <Badge variant="secondary" className="w-fit capitalize">
-                      {proposal.category}
-                    </Badge>
-                    <CardTitle className="text-lg text-white">
-                      {proposal.title}
-                    </CardTitle>
-                    <CardDescription>{proposal.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent />
-                  <CardFooter className="justify-between text-xs text-zinc-400">
-                    <span>Yes {proposal.tallyYes}</span>
-                    <span>No {proposal.tallyNo}</span>
-                    <span>Abstain {proposal.tallyAbstain}</span>
-                  </CardFooter>
-                </Card>
-              </Link>
-            ))}
+        <section
+          id="proposals"
+          className="scroll-mt-20 border-t border-white/[0.06]"
+        >
+          <div className="mx-auto max-w-3xl px-4 py-14 sm:py-16">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
+                Open proposals
+              </h2>
+              <span className="text-xs tabular-nums text-zinc-600">
+                {DEMO_PROPOSALS.length} open
+              </span>
+            </div>
+
+            <ul className="mt-6 divide-y divide-white/[0.06] border-y border-white/[0.06]">
+              {DEMO_PROPOSALS.map((proposal, i) => {
+                return (
+                  <li key={proposal.id}>
+                    <Link
+                      href={`/proposals/${proposal.id}`}
+                      className="group grid grid-cols-[1.75rem_minmax(0,1fr)_3.5rem_0.75rem] items-center gap-3 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_6rem_1rem] sm:gap-5 sm:py-6"
+                    >
+                      <span className="font-mono text-xs text-zinc-600">
+                        0{i + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="truncate text-sm font-medium text-zinc-100 transition-colors group-hover:text-white sm:text-lg">
+                          {proposal.title}
+                        </h3>
+                        <p className="mt-1 text-xs text-zinc-500">
+                          <span className="capitalize">{proposal.category}</span>
+                          <span className="mx-2 text-zinc-700">&middot;</span>
+                          {proposal.tallyYes +
+                            proposal.tallyNo +
+                            proposal.tallyAbstain}{" "}
+                          votes
+                        </p>
+                      </div>
+                      <div className="w-14 sm:w-24">
+                        <MiniTally proposal={proposal} />
+                      </div>
+                      <span
+                        aria-hidden
+                        className="shrink-0 text-zinc-600 transition-all group-hover:translate-x-0.5 group-hover:text-zinc-300"
+                      >
+                        &rarr;
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-white/10 px-4 py-6 text-center text-sm text-zinc-400">
-        <a
-          href="https://github.com/lakshay196/silent-council"
-          className="underline-offset-4 hover:text-white hover:underline"
-          target="_blank"
-          rel="noreferrer"
-        >
-          GitHub
-        </a>
-        <span className="mx-2">·</span>
-        Built at Road to Devcon NITK Surathkal
+      <footer className="border-t border-white/[0.06] px-4 py-8">
+        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 text-xs text-zinc-600 sm:flex-row">
+          <span>Silent Council &middot; NITK Surathkal</span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/lakshay196/silent-council"
+              className="transition-colors hover:text-zinc-300"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+            <Link
+              href="/how-it-works"
+              className="transition-colors hover:text-zinc-300"
+            >
+              How it works
+            </Link>
+            <span>Base Sepolia</span>
+          </div>
+        </div>
       </footer>
     </div>
   );

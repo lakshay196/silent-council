@@ -16,8 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Silent Council",
-  description:
-    "Onchain voting for NITK. Verified voters, secret ballots, public tallies.",
+  description: "Private voting for NITK students.",
 };
 
 export default function RootLayout({

@@ -1,0 +1,43 @@
+import type { Proposal } from "@/lib/types";
+
+export const DEMO_PROPOSALS: Proposal[] = [
+  {
+    id: "demo-mess",
+    onchainId: "0x01",
+    title: "Extend mess hours to 11pm?",
+    description: "Keep dinner service open later on weeknights.",
+    category: "mess",
+    deadline: "2026-08-22T17:00:00.000Z",
+    creatorWallet: "0x0000000000000000000000000000000000000000",
+    tallyYes: 42,
+    tallyNo: 11,
+    tallyAbstain: 3,
+    createdAt: "2026-08-18T00:00:00.000Z",
+  },
+  {
+    id: "demo-plastic",
+    onchainId: "0x02",
+    title: "Ban plastic bottles in hostels?",
+    description: "Switch hostel stores to refill stations only.",
+    category: "hostel",
+    deadline: "2026-08-22T17:00:00.000Z",
+    creatorWallet: "0x0000000000000000000000000000000000000000",
+    tallyYes: 28,
+    tallyNo: 19,
+    tallyAbstain: 7,
+    createdAt: "2026-08-18T00:00:00.000Z",
+  },
+  {
+    id: "demo-library",
+    onchainId: "0x03",
+    title: "Longer library hours during exams?",
+    description: "Keep the library open until 2am in exam weeks.",
+    category: "academic",
+    deadline: "2026-08-22T17:00:00.000Z",
+    creatorWallet: "0x0000000000000000000000000000000000000000",
+    tallyYes: 61,
+    tallyNo: 4,
+    tallyAbstain: 2,
+    createdAt: "2026-08-18T00:00:00.000Z",
+  },
+];

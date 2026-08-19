@@ -125,6 +125,10 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply scroll-smooth font-sans;
+  }
+  ::selection {
+    background: oklch(0.51 0.19 278 / 0.45);
+    color: oklch(0.97 0.01 278);
   }
 }
