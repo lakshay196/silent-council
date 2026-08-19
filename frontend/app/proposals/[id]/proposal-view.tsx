@@ -11,13 +11,34 @@ import { Separator } from "@/components/ui/separator";
 import { TallyBar } from "@/components/tally-bar";
 import { VOTE_CHOICES, type Proposal, type VoteChoice } from "@/lib/types";
 
+type VoteError =
+  | "not_verified"
+  | "already_voted"
+  | "proposal_closed"
+  | "server_error"
+  | "not_implemented"
+  | string;
+
 type VoteResponse =
   | {
       ok: true;
       txHash: string;
       newTally: { yes: number; no: number; abstain: number };
     }
-  | { ok: false; error: string; message: string };
+  | { ok: false; error: VoteError; message: string };
+
+const VOTE_ERROR_MESSAGES: Record<string, string> = {
+  not_verified: "Verify your allowed email before voting.",
+  already_voted: "This verified email has already voted on this proposal.",
+  proposal_closed: "Voting for this proposal has closed.",
+  server_error: "Something went wrong. Please retry in a moment.",
+  not_implemented: "Vote API not deployed yet. Ping Krishna.",
+};
+
+function shortHash(hash: string): string {
+  if (!hash.startsWith("0x") || hash.length < 12) return hash;
+  return `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+}
 
 const VOTE_BUTTONS: {
   choice: VoteChoice;
@@ -57,7 +78,9 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
 
   async function castVote(choice: VoteChoice) {
     if (!isConnected || !address) {
-      toast.error("Connect your wallet first.");
+      toast.error("Connect your wallet first.", {
+        description: "Use the Connect wallet button in the top-right.",
+      });
       return;
     }
 
@@ -77,12 +100,20 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
 
       if (body.ok) {
         setTally(body.newTally);
-        toast.success("Vote recorded onchain.");
+        toast.success("Vote recorded onchain.", {
+          description: `tx ${shortHash(body.txHash)}`,
+        });
       } else {
-        toast.error(body.message || body.error);
+        const friendly =
+          VOTE_ERROR_MESSAGES[body.error] ??
+          body.message ??
+          "Something went wrong.";
+        toast.error(friendly);
       }
     } catch {
-      toast.error("Could not reach /api/vote.");
+      toast.error("Could not reach /api/vote.", {
+        description: "Check your connection and retry.",
+      });
     } finally {
       setPending(null);
     }
@@ -135,6 +166,11 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
       <h2 className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
         Cast your vote
       </h2>
+      {!isConnected ? (
+        <p className="mt-4 text-sm text-zinc-400">
+          Connect a wallet on Base Sepolia to vote.
+        </p>
+      ) : null}
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         {VOTE_BUTTONS.map(({ choice, label, className }) => (
           <Button
@@ -142,7 +178,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
             size="lg"
             variant="outline"
             className={`h-12 text-sm font-medium transition-colors ${className}`}
-            disabled={pending !== null}
+            disabled={pending !== null || !isConnected}
             onClick={() => void castVote(choice)}
           >
             {pending === choice ? "Voting…" : label}

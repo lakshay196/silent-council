@@ -1,10 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { WalletButton } from "@/components/wallet-button";
+import {
+  SILENT_COUNCIL_ABI,
+  SILENT_COUNCIL_ADDRESS,
+} from "@/lib/contracts";
+
+type AttestError =
+  | "invalid_proof"
+  | "wrong_domain"
+  | "already_verified"
+  | "server_error"
+  | "not_implemented"
+  | string;
 
 type AttestResponse =
   | {
@@ -15,28 +28,49 @@ type AttestResponse =
     }
   | {
       ok: false;
-      error:
-        | "invalid_proof"
-        | "wrong_domain"
-        | "already_verified"
-        | "server_error"
-        | string;
+      error: AttestError;
       message: string;
     };
+
+const ATTEST_ERROR_MESSAGES: Record<string, string> = {
+  invalid_proof: "We could not verify this email proof. Please try again.",
+  wrong_domain:
+    "Use an @nitk.edu.in email. Gmail is also allowed for this judging demo.",
+  already_verified: "This wallet or email is already verified.",
+  server_error: "Something went wrong. Please retry in a moment.",
+  not_implemented: "Verification API not deployed yet. Ping Krishna.",
+};
 
 type Status = {
   kind: "idle" | "busy" | "success" | "error";
   text: string;
 };
 
+const ZERO = "0x0000000000000000000000000000000000000000";
+
 export default function VerifyPage() {
   const { address, isConnected } = useAccount();
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<Status>({
     kind: "idle",
     text: "Ready when you are.",
   });
 
+  const contractReady =
+    SILENT_COUNCIL_ABI.length > 0 && SILENT_COUNCIL_ADDRESS !== ZERO;
+
+  const { data: isVerified, refetch: refetchVerified } = useReadContract({
+    address: SILENT_COUNCIL_ADDRESS,
+    abi: SILENT_COUNCIL_ABI,
+    functionName: "isVerified",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: contractReady && Boolean(address),
+    },
+  });
+
   const busy = status.kind === "busy";
+  const verified = isVerified === true || status.kind === "success";
 
   async function onVerify() {
     if (!isConnected || !address) {
@@ -51,6 +85,9 @@ export default function VerifyPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wallet: address,
+          // Wednesday integration: Krishna's /api/attest accepts a labelled mock
+          // request for testing. Thursday must switch to a real @zk-email/sdk
+          // proof or the coordinated OTP fallback (PRD §13.2).
           zkEmailProof: "mock",
           publicInputs: {},
         }),
@@ -60,16 +97,21 @@ export default function VerifyPage() {
 
       if (body.ok) {
         setStatus({ kind: "success", text: "Verified. You can vote now." });
-      } else if (body.error === "wrong_domain") {
-        setStatus({
-          kind: "error",
-          text: body.message || "That email domain isn't allowed.",
-        });
-      } else {
-        setStatus({ kind: "error", text: body.message || body.error });
+        await refetchVerified();
+        await queryClient.invalidateQueries({ queryKey: ["readContract"] });
+        return;
       }
+
+      const friendly =
+        ATTEST_ERROR_MESSAGES[body.error] ??
+        body.message ??
+        "Verification failed.";
+      setStatus({ kind: "error", text: friendly });
     } catch {
-      setStatus({ kind: "error", text: "Could not reach the server." });
+      setStatus({
+        kind: "error",
+        text: "Could not reach the server. Check your connection and retry.",
+      });
     }
   }
 
@@ -79,6 +121,10 @@ export default function VerifyPage() {
       : status.kind === "error"
         ? "text-rose-300"
         : "text-zinc-400";
+
+  const step2CheckClass = verified
+    ? "bg-emerald-400/15 text-emerald-300"
+    : "bg-white/[0.06] text-zinc-400";
 
   return (
     <main className="mx-auto max-w-md px-4 py-16 sm:py-24">
@@ -92,8 +138,8 @@ export default function VerifyPage() {
           <span className="text-indigo-300">Reveal nothing.</span>
         </h1>
         <p className="mt-5 text-sm leading-relaxed text-zinc-400">
-          A zero-knowledge proof confirms you own an @nitk.edu.in inbox —
-          without showing it to anyone. This demo also accepts Gmail.
+          Production accepts @nitk.edu.in emails. This judging demo also accepts
+          Gmail. Your email never leaves your browser in the ZK path.
         </p>
       </div>
 
@@ -118,13 +164,9 @@ export default function VerifyPage() {
 
         <div className="flex items-center gap-3">
           <span
-            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${
-              status.kind === "success"
-                ? "bg-emerald-400/15 text-emerald-300"
-                : "bg-white/[0.06] text-zinc-400"
-            }`}
+            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium ${step2CheckClass}`}
           >
-            {status.kind === "success" ? "\u2713" : "2"}
+            {verified ? "\u2713" : "2"}
           </span>
           <span className="text-sm text-zinc-300">Verify your email</span>
         </div>
@@ -132,14 +174,20 @@ export default function VerifyPage() {
           <Button
             size="lg"
             className="h-11 w-full bg-indigo-500 text-sm font-medium text-white transition-colors hover:bg-indigo-400 disabled:opacity-40"
-            disabled={busy || !isConnected}
+            disabled={busy || !isConnected || verified}
             onClick={() => void onVerify()}
           >
-            {busy ? "Verifying…" : "Verify NITK email"}
+            {verified
+              ? "Already verified"
+              : busy
+                ? "Verifying…"
+                : "Verify NITK email"}
           </Button>
           <p className={`mt-3 text-sm ${statusColor}`} role="status">
             {isConnected
-              ? status.text
+              ? verified
+                ? "You can vote now."
+                : status.text
               : "Connect a wallet above to continue."}
           </p>
         </div>

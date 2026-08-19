@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DEMO_PROPOSALS } from "@/lib/demo-proposals";
+import { listProposals } from "@/lib/proposals";
 import type { Proposal } from "@/lib/types";
 
 function MiniTally({ proposal }: { proposal: Proposal }) {
@@ -26,7 +26,11 @@ function MiniTally({ proposal }: { proposal: Proposal }) {
   );
 }
 
-export default function Home() {
+export const revalidate = 30;
+
+export default async function Home() {
+  const { proposals, source } = await listProposals();
+
   return (
     <div className="relative overflow-x-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[30rem] bg-[radial-gradient(55rem_28rem_at_50%_-6rem,rgba(99,102,241,0.14),transparent_70%)]" />
@@ -71,32 +75,36 @@ export default function Home() {
                 Open proposals
               </h2>
               <span className="text-xs tabular-nums text-zinc-600">
-                {DEMO_PROPOSALS.length} open
+                {proposals.length} open
+                {source === "demo" ? " (demo)" : ""}
               </span>
             </div>
 
             <ul className="mt-6 divide-y divide-white/[0.06] border-y border-white/[0.06]">
-              {DEMO_PROPOSALS.map((proposal, i) => {
+              {proposals.map((proposal, i) => {
+                const totalVotes =
+                  proposal.tallyYes +
+                  proposal.tallyNo +
+                  proposal.tallyAbstain;
                 return (
                   <li key={proposal.id}>
                     <Link
                       href={`/proposals/${proposal.id}`}
-                      className="group grid grid-cols-[1.75rem_minmax(0,1fr)_3.5rem_0.75rem] items-center gap-3 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_6rem_1rem] sm:gap-5 sm:py-6"
+                      className="group grid min-h-11 grid-cols-[1.75rem_minmax(0,1fr)_3.5rem_0.75rem] items-center gap-3 py-5 sm:grid-cols-[2.5rem_minmax(0,1fr)_6rem_1rem] sm:gap-5 sm:py-6"
                     >
                       <span className="font-mono text-xs text-zinc-600">
-                        0{i + 1}
+                        {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
                         <h3 className="truncate text-sm font-medium text-zinc-100 transition-colors group-hover:text-white sm:text-lg">
                           {proposal.title}
                         </h3>
                         <p className="mt-1 text-xs text-zinc-500">
-                          <span className="capitalize">{proposal.category}</span>
+                          <span className="capitalize">
+                            {proposal.category}
+                          </span>
                           <span className="mx-2 text-zinc-700">&middot;</span>
-                          {proposal.tallyYes +
-                            proposal.tallyNo +
-                            proposal.tallyAbstain}{" "}
-                          votes
+                          {totalVotes} votes
                         </p>
                       </div>
                       <div className="w-14 sm:w-24">

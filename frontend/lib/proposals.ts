@@ -53,3 +53,35 @@ export async function getProposal(id: string): Promise<Proposal | null> {
   }
   return demo;
 }
+
+/**
+ * List proposals for the landing page. Falls back to the seeded demo set
+ * whenever Supabase is unconfigured, empty, or unreachable so the demo loop
+ * always has something to click on.
+ */
+export async function listProposals(): Promise<{
+  proposals: Proposal[];
+  source: "supabase" | "demo";
+}> {
+  if (!supabaseConfigured) {
+    return { proposals: DEMO_PROPOSALS, source: "demo" };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("proposals")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && Array.isArray(data) && data.length > 0) {
+      const mapped = data
+        .map((row) => mapProposalRow(row))
+        .filter((p): p is Proposal => p !== null);
+      if (mapped.length > 0) {
+        return { proposals: mapped, source: "supabase" };
+      }
+    }
+  } catch {
+    // Supabase down — fall through to demo data.
+  }
+  return { proposals: DEMO_PROPOSALS, source: "demo" };
+}
