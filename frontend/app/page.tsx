@@ -9,24 +9,31 @@ function MiniTally({ proposal }: { proposal: Proposal }) {
     proposal.tallyYes + proposal.tallyNo + proposal.tallyAbstain || 1;
   const w = (n: number) => `${(n / total) * 100}%`;
   return (
-    <div className="flex h-1 w-full max-w-24 overflow-hidden rounded-full bg-white/[0.06]">
-      <div
-        className="bg-emerald-400/80"
-        style={{ width: w(proposal.tallyYes) }}
-      />
-      <div
-        className="bg-rose-400/70"
-        style={{ width: w(proposal.tallyNo) }}
-      />
-      <div
-        className="bg-zinc-500/70"
-        style={{ width: w(proposal.tallyAbstain) }}
-      />
+    <div className="flex h-1.5 w-full max-w-24 overflow-hidden rounded-full bg-white/[0.06]">
+      {proposal.tallyYes > 0 ? (
+        <div
+          className="h-full bg-emerald-400/80"
+          style={{ width: w(proposal.tallyYes) }}
+        />
+      ) : null}
+      {proposal.tallyNo > 0 ? (
+        <div
+          className="h-full bg-rose-400/90"
+          style={{ width: w(proposal.tallyNo) }}
+        />
+      ) : null}
+      {proposal.tallyAbstain > 0 ? (
+        <div
+          className="h-full bg-zinc-500/70"
+          style={{ width: w(proposal.tallyAbstain) }}
+        />
+      ) : null}
     </div>
   );
 }
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function Home() {
   const { proposals, source } = await listProposals();

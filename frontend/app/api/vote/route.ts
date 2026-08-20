@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   isAddress,
   issuerConfigErrorMessage,
@@ -230,10 +231,17 @@ export async function POST(req: NextRequest) {
         ? proposal.tally_no
         : proposal.tally_abstain;
 
-    await admin
+    const { error: tallyError } = await admin
       .from("proposals")
       .update({ [tallyColumn]: currentCount + 1 })
       .eq("id", proposal.id);
+
+    if (tallyError) {
+      console.error("Tally update error:", tallyError.message);
+    }
+
+    revalidatePath("/");
+    revalidatePath(`/proposals/${proposal.id}`);
 
     const newTally = {
       yes: voteChoice === 0 ? proposal.tally_yes + 1 : proposal.tally_yes,
