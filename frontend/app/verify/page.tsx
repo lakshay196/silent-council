@@ -24,7 +24,8 @@ type OtpPhase = "entering_email" | "sending" | "entering_code" | "verifying";
 const ZK_ERROR_MESSAGES: Record<string, string> = {
   invalid_proof: "We could not verify this email proof.",
   wrong_domain: "Use an @nitk.edu.in or @gmail.com address.",
-  already_verified: "This wallet or email is already verified.",
+  already_verified:
+    "That email identity is already registered to a wallet. If you still cannot vote, this wallet is not the verified one — use OTP with your own Gmail.",
   server_error: "Verification server error.",
   not_implemented: "Verification API not deployed yet.",
 };
@@ -93,7 +94,7 @@ export default function VerifyPage() {
         const errKey = data.error ?? "server_error";
         const friendly = ZK_ERROR_MESSAGES[errKey] ?? data.message ?? "Verification failed.";
         setZkError(friendly);
-        if (ZK_FALLBACK_ERRORS.has(errKey)) {
+        if (ZK_FALLBACK_ERRORS.has(errKey) || errKey === "already_verified") {
           setShowOtpFallback(true);
         }
       }

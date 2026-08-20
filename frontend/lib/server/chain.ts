@@ -32,6 +32,17 @@ export function getIssuerAccount() {
   if (!privateKey.startsWith("0x")) {
     privateKey = `0x${privateKey}`;
   }
+  const hexBody = privateKey.slice(2);
+  if (hexBody.length === 40) {
+    throw new Error(
+      "ISSUER_PRIVATE_KEY is a wallet address, not a private key. Paste the 64-character hex key of the issuer MetaMask account."
+    );
+  }
+  if (hexBody.length !== 64) {
+    throw new Error(
+      "ISSUER_PRIVATE_KEY must be 0x plus 64 hex characters (32 bytes)."
+    );
+  }
   return privateKeyToAccount(privateKey as Hex);
 }
 
@@ -136,6 +147,12 @@ export async function relayVote(
 
   await publicClient.waitForTransactionReceipt({ hash: txHash });
   return txHash;
+}
+
+export function issuerConfigErrorMessage(err: unknown): string | null {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes("ISSUER_PRIVATE_KEY")) return msg;
+  return null;
 }
 
 export { isAddress };

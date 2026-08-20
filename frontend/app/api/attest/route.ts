@@ -3,6 +3,7 @@ import { parseAllowedDomains } from "@/lib/types";
 import {
   computeEmailNullifier,
   isAddress,
+  issuerConfigErrorMessage,
   readWalletNullifier,
   relayVerifyVoter,
   signVoterHash,
@@ -22,11 +23,12 @@ function attestationUidFallback(): string {
   );
 }
 
-function extractEmail(publicInputs: unknown, isMock = false): string | null {
+function mockEmailForWallet(wallet: string): string {
+  return `demo-${wallet.slice(2, 10).toLowerCase()}@nitk.edu.in`;
+}
+
+function extractEmail(publicInputs: unknown): string | null {
   if (!publicInputs || (typeof publicInputs === "object" && Object.keys(publicInputs as object).length === 0)) {
-    if (isMock) {
-      return "demo@nitk.edu.in";
-    }
     return null;
   }
 
@@ -38,7 +40,6 @@ function extractEmail(publicInputs: unknown, isMock = false): string | null {
     if (typeof obj.recipientEmail === "string" && obj.recipientEmail.includes("@")) {
       return obj.recipientEmail.trim();
     }
-    // Also support string array formats if any
     for (const val of Object.values(obj)) {
       if (typeof val === "string" && val.includes("@") && val.includes(".")) {
         return val.trim();
@@ -48,10 +49,6 @@ function extractEmail(publicInputs: unknown, isMock = false): string | null {
 
   if (typeof publicInputs === "string" && publicInputs.includes("@")) {
     return publicInputs.trim();
-  }
-
-  if (isMock) {
-    return "demo@nitk.edu.in";
   }
 
   return null;
@@ -108,9 +105,10 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      email = verification.email || extractEmail(publicInputs, false);
+      email = verification.email || extractEmail(publicInputs);
     } else {
-      email = extractEmail(publicInputs, true);
+      // One shared demo@ email made every wallet collide on the same nullifier.
+      email = extractEmail(publicInputs) ?? mockEmailForWallet(wallet);
     }
 
     if (!email) {
@@ -241,9 +239,14 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (err: unknown) {
+    const issuerMsg = issuerConfigErrorMessage(err);
     console.error("Unexpected error in /api/attest:", err instanceof Error ? err.message : "unknown");
     return NextResponse.json(
-      { ok: false, error: "server_error", message: "An unexpected error occurred." },
+      {
+        ok: false,
+        error: "server_error",
+        message: issuerMsg ?? "An unexpected error occurred.",
+      },
       { status: 500 }
     );
   }

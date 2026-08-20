@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   isAddress,
+  issuerConfigErrorMessage,
   readWalletNullifier,
   relayVote,
   signVoteHash,
@@ -249,9 +250,14 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (err: unknown) {
+    const issuerMsg = issuerConfigErrorMessage(err);
     console.error("Unexpected error in /api/vote:", err instanceof Error ? err.message : "unknown");
     return NextResponse.json(
-      { ok: false, error: "server_error", message: "An unexpected server error occurred." },
+      {
+        ok: false,
+        error: "server_error",
+        message: issuerMsg ?? "An unexpected server error occurred.",
+      },
       { status: 500 }
     );
   }
