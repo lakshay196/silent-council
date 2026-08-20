@@ -92,6 +92,13 @@ export default function VerifyPage() {
         await markVerified();
       } else {
         const errKey = data.error ?? "server_error";
+        if (errKey === "already_verified") {
+          const { data: onChain } = await refetchVerified();
+          if (onChain === true) {
+            await markVerified();
+            return;
+          }
+        }
         const friendly =
           errKey === "server_error" && data.message
             ? data.message
@@ -200,7 +207,7 @@ export default function VerifyPage() {
           </span>
           <span className="text-sm text-zinc-300">Connect your wallet</span>
         </div>
-        <div className="mt-4 pl-9">
+        <div className="mt-4 sm:pl-9">
           <WalletButton />
         </div>
 
@@ -214,11 +221,19 @@ export default function VerifyPage() {
           <span className="text-sm text-zinc-300">Verify your email</span>
         </div>
 
-        <div className="mt-4 pl-9 space-y-3">
+        <div className="mt-4 space-y-3 sm:pl-9">
           {verified && (
-            <p className="text-sm text-emerald-300">
-              You&apos;re verified. You can now vote on proposals.
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-emerald-300">
+                You&apos;re verified. You can now vote on proposals.
+              </p>
+              <Link
+                href="/"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-indigo-500 px-4 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+              >
+                Go to proposals
+              </Link>
+            </div>
           )}
 
           {/* ── ZK path (default) ── */}

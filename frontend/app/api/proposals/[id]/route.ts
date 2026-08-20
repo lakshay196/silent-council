@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAddress } from "@/lib/server/chain";
 import { DEMO_PROPOSALS } from "@/lib/demo-proposals";
 import {
   getSupabaseAdmin,
@@ -9,11 +10,12 @@ import {
 } from "@/lib/server/supabase-admin";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await context.params;
+    const walletParam = req.nextUrl.searchParams.get("wallet")?.trim().toLowerCase();
 
     if (!id || id.trim().length === 0) {
       return NextResponse.json(
@@ -25,7 +27,10 @@ export async function GET(
     if (!supabaseAdminConfigured) {
       const demo = DEMO_PROPOSALS.find((p) => p.id === id || p.onchainId === id);
       if (demo) {
-        return NextResponse.json({ proposal: demo, recentVotes: [] }, { status: 200 });
+        return NextResponse.json(
+          { proposal: demo, recentVotes: [], userHasVoted: false },
+          { status: 200 }
+        );
       }
       return NextResponse.json(
         { ok: false, error: "proposal_closed", message: "Proposal not found" },
@@ -48,7 +53,10 @@ export async function GET(
     if (proposalError || !proposalData) {
       const demo = DEMO_PROPOSALS.find((p) => p.id === id || p.onchainId === id);
       if (demo) {
-        return NextResponse.json({ proposal: demo, recentVotes: [] }, { status: 200 });
+        return NextResponse.json(
+          { proposal: demo, recentVotes: [], userHasVoted: false },
+          { status: 200 }
+        );
       }
       return NextResponse.json(
         { ok: false, error: "proposal_closed", message: "Proposal not found" },
@@ -76,10 +84,30 @@ export async function GET(
       timestamp: v.created_at,
     }));
 
+    let userHasVoted = false;
+    if (walletParam && isAddress(walletParam)) {
+      const { data: verifiedUser } = await admin
+        .from("verified_users")
+        .select("nullifier")
+        .ilike("wallet", walletParam)
+        .maybeSingle();
+
+      if (verifiedUser?.nullifier) {
+        const { data: existingVote } = await admin
+          .from("votes")
+          .select("id")
+          .eq("proposal_id", proposalData.id)
+          .eq("nullifier", verifiedUser.nullifier)
+          .maybeSingle();
+        userHasVoted = Boolean(existingVote);
+      }
+    }
+
     return NextResponse.json(
       {
         proposal,
         recentVotes,
+        userHasVoted,
       },
       { status: 200 }
     );

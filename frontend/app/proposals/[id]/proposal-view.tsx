@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -29,7 +29,7 @@ type VoteResponse =
 
 const VOTE_ERROR_MESSAGES: Record<string, string> = {
   not_verified: "Verify your allowed email before voting.",
-  already_voted: "This verified email has already voted on this proposal.",
+  already_voted: "Double vote rejected — one verified student, one vote.",
   proposal_closed: "Voting for this proposal has closed.",
   server_error: "Something went wrong. Please retry in a moment.",
   not_implemented: "Vote API not deployed yet. Ping Krishna.",
@@ -77,10 +77,56 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
     abstain: proposal.tallyAbstain,
   });
   const [pending, setPending] = useState<VoteChoice | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
 
   const totalVotes = tally.yes + tally.no + tally.abstain;
 
+  useEffect(() => {
+    if (!address) {
+      setHasVoted(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/proposals/${proposal.id}?wallet=${encodeURIComponent(address)}`
+        );
+        const data = (await res.json()) as {
+          userHasVoted?: boolean;
+          proposal?: { tallyYes?: number; tallyNo?: number; tallyAbstain?: number };
+        };
+        if (cancelled) return;
+        if (data.userHasVoted) setHasVoted(true);
+        if (
+          data.proposal &&
+          typeof data.proposal.tallyYes === "number" &&
+          typeof data.proposal.tallyNo === "number" &&
+          typeof data.proposal.tallyAbstain === "number"
+        ) {
+          setTally({
+            yes: data.proposal.tallyYes,
+            no: data.proposal.tallyNo,
+            abstain: data.proposal.tallyAbstain,
+          });
+        }
+      } catch {
+        // Non-blocking — user can still attempt vote.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [address, proposal.id]);
+
   async function castVote(choice: VoteChoice) {
+    if (hasVoted) {
+      toast.error("Double vote rejected.", {
+        description: "You already voted on this proposal. One person, one vote.",
+      });
+      return;
+    }
+
     if (!isConnected || !address) {
       toast.error("Connect your wallet first.", {
         description: "Use the Connect wallet button in the top-right.",
@@ -103,6 +149,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
       const body = data as VoteResponse;
 
       if (body.ok) {
+        setHasVoted(true);
         setTally(body.newTally);
         toast.success("Vote recorded on Base Sepolia.", {
           description: `tx ${shortHash(body.txHash)}`,
@@ -118,7 +165,15 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
           VOTE_ERROR_MESSAGES[body.error] ??
           body.message ??
           "Something went wrong.";
-        if (body.error === "not_verified") {
+
+        if (body.error === "already_voted") {
+          setHasVoted(true);
+          toast.error("Double vote rejected.", {
+            description:
+              body.message ??
+              "One verified student, one vote per proposal — enforced onchain.",
+          });
+        } else if (body.error === "not_verified") {
           toast.error(friendly, {
             description: body.message,
             action: {
@@ -144,7 +199,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
+    <main className="mx-auto max-w-2xl px-4 py-8 sm:py-16">
       <Link
         href="/"
         className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition-colors hover:border-white/30 hover:bg-white/[0.1]"
@@ -152,7 +207,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
         ← Back to proposals
       </Link>
 
-      <div className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-10">
         <Badge
           variant="outline"
           className="border-indigo-400/25 bg-indigo-400/[0.06] capitalize text-indigo-300"
@@ -164,14 +219,14 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
         </span>
       </div>
 
-      <h1 className="mt-5 text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl">
+      <h1 className="mt-5 text-balance text-2xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl">
         {proposal.title}
       </h1>
       <p className="mt-5 text-base leading-relaxed text-zinc-400">
         {proposal.description}
       </p>
 
-      <Separator className="my-10 bg-white/[0.08]" />
+      <Separator className="my-8 bg-white/[0.08] sm:my-10" />
 
       <div className="flex items-baseline justify-between">
         <h2 className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
@@ -185,23 +240,32 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
         <TallyBar yes={tally.yes} no={tally.no} abstain={tally.abstain} />
       </div>
 
-      <Separator className="my-10 bg-white/[0.08]" />
+      <Separator className="my-8 bg-white/[0.08] sm:my-10" />
 
       <h2 className="text-[11px] font-medium uppercase tracking-[0.3em] text-zinc-500">
         Cast your vote
       </h2>
+
+      {hasVoted ? (
+        <p className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] px-4 py-3 text-sm text-emerald-300">
+          You already voted on this proposal. Tap any button again to see
+          double-vote rejection.
+        </p>
+      ) : null}
+
       {!isConnected ? (
         <p className="mt-4 text-sm text-zinc-400">
           Connect a wallet on Base Sepolia to vote.
         </p>
       ) : null}
+
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         {VOTE_BUTTONS.map(({ choice, label, className }) => (
           <Button
             key={label}
             size="lg"
             variant="outline"
-            className={`h-12 text-sm font-medium transition-colors ${className}`}
+            className={`h-12 min-h-11 text-sm font-medium transition-colors ${className}`}
             disabled={pending !== null || !isConnected}
             onClick={() => void castVote(choice)}
           >
