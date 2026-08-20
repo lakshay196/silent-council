@@ -248,8 +248,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
 
       {hasVoted ? (
         <p className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] px-4 py-3 text-sm text-emerald-300">
-          You already voted on this proposal. Tap any button again to see
-          double-vote rejection.
+          You already voted on this proposal. Ballots are final.
         </p>
       ) : null}
 
@@ -266,7 +265,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
             size="lg"
             variant="outline"
             className={`h-12 min-h-11 text-sm font-medium transition-colors ${className}`}
-            disabled={pending !== null || !isConnected}
+            disabled={pending !== null || !isConnected || hasVoted}
             onClick={() => void castVote(choice)}
           >
             {pending === choice ? "Voting…" : label}
