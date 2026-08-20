@@ -92,7 +92,10 @@ export default function VerifyPage() {
         await markVerified();
       } else {
         const errKey = data.error ?? "server_error";
-        const friendly = ZK_ERROR_MESSAGES[errKey] ?? data.message ?? "Verification failed.";
+        const friendly =
+          errKey === "server_error" && data.message
+            ? data.message
+            : (ZK_ERROR_MESSAGES[errKey] ?? data.message ?? "Verification failed.");
         setZkError(friendly);
         if (ZK_FALLBACK_ERRORS.has(errKey) || errKey === "already_verified") {
           setShowOtpFallback(true);

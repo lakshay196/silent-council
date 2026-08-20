@@ -110,6 +110,7 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
           "Something went wrong.";
         if (body.error === "not_verified") {
           toast.error(friendly, {
+            description: body.message,
             action: {
               label: "Verify now",
               onClick: () => {
@@ -118,7 +119,9 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
             },
           });
         } else {
-          toast.error(friendly);
+          toast.error(friendly, {
+            description: body.message !== friendly ? body.message : undefined,
+          });
         }
       }
     } catch {
