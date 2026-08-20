@@ -35,6 +35,10 @@ const VOTE_ERROR_MESSAGES: Record<string, string> = {
   not_implemented: "Vote API not deployed yet. Ping Krishna.",
 };
 
+function basescanTxUrl(txHash: string): string {
+  return `https://sepolia.basescan.org/tx/${txHash}`;
+}
+
 function shortHash(hash: string): string {
   if (!hash.startsWith("0x") || hash.length < 12) return hash;
   return `${hash.slice(0, 6)}…${hash.slice(-4)}`;
@@ -100,8 +104,14 @@ export function ProposalView({ proposal }: { proposal: Proposal }) {
 
       if (body.ok) {
         setTally(body.newTally);
-        toast.success("Vote recorded onchain.", {
+        toast.success("Vote recorded on Base Sepolia.", {
           description: `tx ${shortHash(body.txHash)}`,
+          action: {
+            label: "View on Basescan",
+            onClick: () => {
+              window.open(basescanTxUrl(body.txHash), "_blank", "noopener,noreferrer");
+            },
+          },
         });
       } else {
         const friendly =
